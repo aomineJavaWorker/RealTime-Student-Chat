@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="lv">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1"
+    >
+
+    <title>Student Chat</title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+
+        <a class="navbar-brand" href="/">
+            Student Chat
+        </a>
+
+    </div>
+</nav>
+
+<div class="container mt-5">
+
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Lietotāja vārda ievade -->
+            <div id="loginSection" class="card shadow">
+
+                <div class="card-body">
+
+                    <h2 id="courseTitle" class="mb-3">
+                        Čats
+                    </h2>
+
+                    <p class="text-secondary">
+                        Ievadi savu vārdu, lai pievienotos čatam.
+                    </p>
+
+                    <input
+                        type="text"
+                        id="usernameInput"
+                        class="form-control mb-3"
+                        placeholder="Tavs vārds"
+                        maxlength="30"
+                    >
+
+                    <div
+                        id="usernameError"
+                        class="alert alert-danger d-none"
+                    >
+                        Lūdzu, ievadi savu vārdu!
+                    </div>
+
+                    <button
+                        id="joinButton"
+                        class="btn btn-primary w-100"
+                    >
+                        Pievienoties čatam
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- Čats -->
+            <div
+                id="chatSection"
+                class="card shadow d-none"
+            >
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+
+                        <h2 id="chatTitle" class="mb-0">
+                            Čats
+                        </h2>
+
+                        <span
+                            id="usernameDisplay"
+                            class="badge text-bg-primary"
+                        >
+                        </span>
+
+                    </div>
+
+                    <div
+                        id="messages"
+                        class="border rounded p-3 mb-3"
+                    >
+                        <p class="text-secondary mb-0">
+                            Ziņu vēl nav.
+                        </p>
+                    </div>
+
+                    <div class="input-group">
+
+                        <input
+                            type="text"
+                            id="messageInput"
+                            class="form-control"
+                            placeholder="Raksti ziņu..."
+                        >
+
+                        <button
+                            id="sendButton"
+                            class="btn btn-primary"
+                        >
+                            Nosūtīt
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+</div>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js">
+</script>
+
+<script src="js/chat.js"></script>
+
+</body>
+
+</html>

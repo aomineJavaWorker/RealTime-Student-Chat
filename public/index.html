@@ -48,30 +48,24 @@
                             Izvēlies savu kursu
                         </h2>
 
-                        <select
-                            id="courseSelect"
-                            class="form-select mb-3"
-                        >
-                            <option selected disabled>
+                        <select id="courseSelect" class="form-select mb-3">
+                            <option value="" selected disabled>
                                 Izvēlies kursu...
                             </option>
 
-                            <option value="1">
-                                1. kurss
-                            </option>
-
-                            <option value="2">
-                                2. kurss
-                            </option>
-
-                            <option value="3">
-                                3. kurss
-                            </option>
-
-                            <option value="4">
-                                4. kurss
-                            </option>
+                            <option value="1">1. kurss</option>
+                            <option value="2">2. kurss</option>
+                            <option value="3">3. kurss</option>
+                            <option value="4">4. kurss</option>
                         </select>
+
+                        <div
+                            id="errorMessage"
+                            class="alert alert-danger d-none"
+                            role="alert"
+                        >
+                            Lūdzu, izvēlies kursu!
+                        </div>
 
                         <button
                             id="continueButton"
