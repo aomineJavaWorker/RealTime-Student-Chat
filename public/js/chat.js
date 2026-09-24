@@ -26,6 +26,42 @@ if (course) {
     chatTitle.textContent = `${course}. kursa čats`;
 }
 
+async function loadMessages() {
+    try {
+        const response = await fetch(
+            `/api/messages?course=${course}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || "Neizdevās ielādēt ziņas."
+            );
+        }
+
+        messages.innerHTML = "";
+
+        if (data.length === 0) {
+            messages.innerHTML = `
+                <p class="text-secondary mb-0">
+                    Ziņu vēl nav.
+                </p>
+            `;
+
+            return;
+        }
+
+        data.forEach((message) => {
+            addMessageToChat(message);
+        });
+
+    } catch (error) {
+        messageError.textContent = error.message;
+        messageError.classList.remove("d-none");
+    }
+}
+
 
 joinButton.addEventListener("click", async () => {
     const username = usernameInput.value.trim();
@@ -66,6 +102,7 @@ joinButton.addEventListener("click", async () => {
 
         loginSection.classList.add("d-none");
         chatSection.classList.remove("d-none");
+        await loadMessages();
 
         console.log("Izveidots lietotājs:", data);
         console.log("User ID:", currentUserId);
