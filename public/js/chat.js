@@ -117,7 +117,9 @@ joinButton.addEventListener("click", async () => {
 });
 
 function addMessageToChat(message) {
-    const emptyMessage = messages.querySelector(".text-secondary");
+    const emptyMessage = messages.querySelector(
+    "p.text-secondary"
+    );
 
     if (emptyMessage) {
         emptyMessage.remove();
@@ -131,10 +133,58 @@ function addMessageToChat(message) {
         "mb-2"
     );
 
+
+    const messageHeader = document.createElement("div");
+
+    messageHeader.classList.add(
+        "d-flex",
+        "justify-content-between",
+        "align-items-center"
+    );
+
+
     const usernameElement = document.createElement("strong");
 
     usernameElement.textContent =
         message.user.username;
+
+
+    const timeElement = document.createElement("small");
+
+    timeElement.classList.add(
+        "text-secondary"
+    );
+
+
+    if (message.createdAt) {
+
+    const messageDate = new Date(
+        message.createdAt
+        );
+
+        timeElement.textContent =
+            messageDate.toLocaleTimeString(
+                "lv-LV",
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+    } else {
+
+        timeElement.textContent = "";
+    }
+
+
+    messageHeader.appendChild(
+        usernameElement
+    );
+
+    messageHeader.appendChild(
+        timeElement
+    );
+
 
     const textElement = document.createElement("p");
 
@@ -143,10 +193,18 @@ function addMessageToChat(message) {
     textElement.textContent =
         message.text;
 
-    messageElement.appendChild(usernameElement);
-    messageElement.appendChild(textElement);
 
-    messages.appendChild(messageElement);
+    messageElement.appendChild(
+        messageHeader
+    );
+
+    messageElement.appendChild(
+        textElement
+    );
+
+    messages.appendChild(
+        messageElement
+    );
 }
 
 socket.on(
