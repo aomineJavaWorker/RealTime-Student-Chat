@@ -2,8 +2,25 @@ const express = require("express");
 
 const Message = require("../models/Message");
 const Course = require("../models/Course");
+const User = require("../models/User");
 
 const router = express.Router();
+
+
+const allowedReactions = [
+    "👍",
+    "❤️",
+    "😂",
+    "😍",
+    "😮",
+    "😢",
+    "😡",
+    "🔥",
+    "🎉",
+    "👏",
+    "🤔",
+    "😎"
+];
 
 
 // ==========================================
@@ -133,6 +150,22 @@ router.post("/", async (req, res) => {
         }
 
 
+        const user =
+            await User.findById(
+                userId
+            );
+
+
+        if (!user) {
+
+            return res.status(404).json({
+                message:
+                    "Lietotājs nav atrasts."
+            });
+
+        }
+
+
         let replyTo = null;
 
 
@@ -173,7 +206,7 @@ router.post("/", async (req, res) => {
         }
 
 
-        let message =
+        const createdMessage =
             await Message.create({
                 text:
                     trimmedText,
@@ -189,9 +222,9 @@ router.post("/", async (req, res) => {
             });
 
 
-        message =
+        const message =
             await Message.findById(
-                message._id
+                createdMessage._id
             )
                 .populate(
                     "user",
@@ -320,6 +353,10 @@ router.put("/:id", async (req, res) => {
         }
 
 
+        const courseNumber =
+            message.course.number;
+
+
         message.text =
             newText;
 
@@ -350,7 +387,7 @@ router.put("/:id", async (req, res) => {
 
         req.io
             .to(
-                `course-${message.course.number}`
+                `course-${courseNumber}`
             )
             .emit(
                 "messageUpdated",
@@ -378,6 +415,188 @@ router.put("/:id", async (req, res) => {
     }
 
 });
+
+
+// ==========================================
+// REAKCIJAS
+// ==========================================
+
+router.post(
+    "/:id/reaction",
+    async (req, res) => {
+
+        try {
+
+            const {
+                userId,
+                reaction
+            } = req.body;
+
+
+            if (
+                !userId ||
+                !reaction
+            ) {
+
+                return res.status(400).json({
+                    message:
+                        "Trūkst reakcijas datu."
+                });
+
+            }
+
+
+            if (
+                !allowedReactions.includes(
+                    reaction
+                )
+            ) {
+
+                return res.status(400).json({
+                    message:
+                        "Nederīga reakcija."
+                });
+
+            }
+
+
+            const user =
+                await User.findById(
+                    userId
+                );
+
+
+            if (!user) {
+
+                return res.status(404).json({
+                    message:
+                        "Lietotājs nav atrasts."
+                });
+
+            }
+
+
+            const message =
+                await Message.findById(
+                    req.params.id
+                )
+                    .populate(
+                        "course",
+                        "number"
+                    );
+
+
+            if (!message) {
+
+                return res.status(404).json({
+                    message:
+                        "Ziņa nav atrasta."
+                });
+
+            }
+
+
+            const reactionIndex =
+                message.reactions.findIndex(
+                    (item) =>
+                        item.user.toString() ===
+                        userId
+                );
+
+
+            if (reactionIndex !== -1) {
+
+                const currentReaction =
+                    message.reactions[
+                        reactionIndex
+                    ];
+
+
+                if (
+                    currentReaction.type ===
+                    reaction
+                ) {
+
+                    message.reactions.splice(
+                        reactionIndex,
+                        1
+                    );
+
+                } else {
+
+                    currentReaction.type =
+                        reaction;
+
+                }
+
+            } else {
+
+                message.reactions.push({
+                    user:
+                        userId,
+
+                    type:
+                        reaction
+                });
+
+            }
+
+
+            await message.save();
+
+
+            const reactions =
+                message.reactions.map(
+                    (item) => ({
+                        user:
+                            item.user.toString(),
+
+                        type:
+                            item.type
+                    })
+                );
+
+
+            const reactionData = {
+                messageId:
+                    message._id.toString(),
+
+                reactions:
+                    reactions
+            };
+
+
+            req.io
+                .to(
+                    `course-${message.course.number}`
+                )
+                .emit(
+                    "messageReactionUpdated",
+                    reactionData
+                );
+
+
+            res.json(
+                reactionData
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Reakcijas kļūda:",
+                error
+            );
+
+
+            res.status(500).json({
+                message:
+                    "Neizdevās saglabāt reakciju."
+            });
+
+        }
+
+    }
+);
 
 
 // ==========================================

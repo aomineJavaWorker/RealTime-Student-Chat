@@ -143,6 +143,22 @@ let currentUsername = null;
 let currentReplyTo = null;
 
 
+const reactionTypes = [
+    "👍",
+    "❤️",
+    "😂",
+    "😍",
+    "😮",
+    "😢",
+    "😡",
+    "🔥",
+    "🎉",
+    "👏",
+    "🤔",
+    "😎"
+];
+
+
 // ==========================================
 // KURSA NOSAUKUMS
 // ==========================================
@@ -244,9 +260,11 @@ async function loadMessages() {
                 </p>
             `;
 
+
             searchEmpty.classList.add(
                 "d-none"
             );
+
 
             return;
 
@@ -438,6 +456,31 @@ function addMessageToChat(message) {
         message.user?.username || "";
 
 
+    // Dubultklikšķis uz ziņas = 👍
+    messageElement.addEventListener(
+        "dblclick",
+        (event) => {
+
+            if (
+                event.target.closest(
+                    "button"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            toggleReaction(
+                message._id,
+                "👍"
+            );
+
+        }
+    );
+
+
     const messageHeader =
         document.createElement(
             "div"
@@ -513,6 +556,161 @@ function addMessageToChat(message) {
 
     rightSide.appendChild(
         timeElement
+    );
+
+
+    // ======================================
+    // REAKCIJU IZVĒLNE
+    // ======================================
+
+    const reactionDropdown =
+        document.createElement(
+            "div"
+        );
+
+
+    reactionDropdown.classList.add(
+        "dropdown"
+    );
+
+
+    const reactionMenuButton =
+        document.createElement(
+            "button"
+        );
+
+
+    reactionMenuButton.type =
+        "button";
+
+
+    reactionMenuButton.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-outline-secondary",
+        "dropdown-toggle"
+    );
+
+
+    reactionMenuButton.setAttribute(
+        "data-bs-toggle",
+        "dropdown"
+    );
+
+
+    reactionMenuButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+
+    reactionMenuButton.textContent =
+        "😊";
+
+
+    const reactionMenu =
+        document.createElement(
+            "div"
+        );
+
+
+    reactionMenu.classList.add(
+        "dropdown-menu",
+        "p-2"
+    );
+
+
+    const reactionRow =
+        document.createElement(
+            "div"
+        );
+
+
+    reactionRow.classList.add(
+        "row",
+        "row-cols-4",
+        "g-1"
+    );
+
+
+    reactionTypes.forEach(
+        (reaction) => {
+
+            const column =
+                document.createElement(
+                    "div"
+                );
+
+
+            column.classList.add(
+                "col"
+            );
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.classList.add(
+                "btn",
+                "btn-light",
+                "w-100"
+            );
+
+
+            button.textContent =
+                reaction;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    toggleReaction(
+                        message._id,
+                        reaction
+                    );
+
+                }
+            );
+
+
+            column.appendChild(
+                button
+            );
+
+
+            reactionRow.appendChild(
+                column
+            );
+
+        }
+    );
+
+
+    reactionMenu.appendChild(
+        reactionRow
+    );
+
+
+    reactionDropdown.appendChild(
+        reactionMenuButton
+    );
+
+
+    reactionDropdown.appendChild(
+        reactionMenu
+    );
+
+
+    rightSide.appendChild(
+        reactionDropdown
     );
 
 
@@ -665,7 +863,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // ATBILDE UZ CITU ZIŅU
+    // ATBILDE UZ ZIŅU
     // ======================================
 
     if (message.replyTo) {
@@ -730,6 +928,10 @@ function addMessageToChat(message) {
     }
 
 
+    // ======================================
+    // ZIŅAS TEKSTS
+    // ======================================
+
     const textElement =
         document.createElement(
             "p"
@@ -769,9 +971,255 @@ function addMessageToChat(message) {
     );
 
 
+    // ======================================
+    // AKTĪVĀS REAKCIJAS
+    // ======================================
+
+    const reactionsContainer =
+        document.createElement(
+            "div"
+        );
+
+
+    reactionsContainer.classList.add(
+        "reactions-container",
+        "d-flex",
+        "gap-2",
+        "flex-wrap",
+        "mt-2"
+    );
+
+
+    messageElement.appendChild(
+        reactionsContainer
+    );
+
+
     messages.appendChild(
         messageElement
     );
+
+
+    renderReactions(
+        messageElement,
+        message.reactions || []
+    );
+
+}
+
+
+// ==========================================
+// PARĀDĪT AKTĪVĀS REAKCIJAS
+// ==========================================
+
+function renderReactions(
+    messageElement,
+    reactions
+) {
+
+    const reactionsContainer =
+        messageElement.querySelector(
+            ".reactions-container"
+        );
+
+
+    if (!reactionsContainer) {
+
+        return;
+
+    }
+
+
+    reactionsContainer.innerHTML =
+        "";
+
+
+    reactionTypes.forEach(
+        (reactionType) => {
+
+            const reactionUsers =
+                reactions
+                    .filter(
+                        (reaction) =>
+                            reaction.type ===
+                            reactionType
+                    )
+                    .map(
+                        (reaction) => {
+
+                            if (
+                                typeof reaction.user ===
+                                "object"
+                            ) {
+
+                                return String(
+                                    reaction.user._id
+                                );
+
+                            }
+
+
+                            return String(
+                                reaction.user
+                            );
+
+                        }
+                    );
+
+
+            const reactionCount =
+                reactionUsers.length;
+
+
+            if (
+                reactionCount === 0
+            ) {
+
+                return;
+
+            }
+
+
+            const currentUserReacted =
+                reactionUsers.includes(
+                    String(
+                        currentUserId
+                    )
+                );
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.classList.add(
+                "btn",
+                "btn-sm"
+            );
+
+
+            if (
+                currentUserReacted
+            ) {
+
+                button.classList.add(
+                    "btn-primary"
+                );
+
+            } else {
+
+                button.classList.add(
+                    "btn-outline-secondary"
+                );
+
+            }
+
+
+            button.textContent =
+                `${reactionType} ${reactionCount}`;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    toggleReaction(
+                        messageElement
+                            .dataset
+                            .messageId,
+
+                        reactionType
+                    );
+
+                }
+            );
+
+
+            reactionsContainer.appendChild(
+                button
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// PIEVIENOT / NOŅEMT REAKCIJU
+// ==========================================
+
+async function toggleReaction(
+    messageId,
+    reaction
+) {
+
+    if (!currentUserId) {
+
+        showMessageError(
+            "Lietotājs nav pievienojies čatam."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `/api/messages/${messageId}/reaction`,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            userId:
+                                currentUserId,
+
+                            reaction:
+                                reaction
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās saglabāt reakciju."
+            );
+
+        }
+
+
+        hideMessageError();
+
+    } catch (error) {
+
+        showMessageError(
+            error.message
+        );
+
+    }
 
 }
 
@@ -866,11 +1314,7 @@ function applyMessageSearch() {
 
 searchInput.addEventListener(
     "input",
-    () => {
-
-        applyMessageSearch();
-
-    }
+    applyMessageSearch
 );
 
 
@@ -1222,6 +1666,36 @@ socket.on(
 
 
         applyMessageSearch();
+
+    }
+);
+
+
+// ==========================================
+// REAKCIJAS REAL-TIME
+// ==========================================
+
+socket.on(
+    "messageReactionUpdated",
+    (data) => {
+
+        const messageElement =
+            messages.querySelector(
+                `[data-message-id="${data.messageId}"]`
+            );
+
+
+        if (!messageElement) {
+
+            return;
+
+        }
+
+
+        renderReactions(
+            messageElement,
+            data.reactions || []
+        );
 
     }
 );
