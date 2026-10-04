@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="lv">
 
 <head>
@@ -10,7 +11,10 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Student Chat</title>
+    <title>
+        Čats | Student Chat
+    </title>
+
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
@@ -19,129 +23,118 @@
 
 </head>
 
+
 <body>
 
 
-<nav class="navbar navbar-dark bg-dark">
+<nav
+    class="navbar navbar-dark bg-dark"
+>
 
-    <div class="container">
+    <div
+        class="container d-flex gap-2"
+    >
 
         <a
             class="navbar-brand"
-            href="/"
+            href="/chat.html"
         >
             Student Chat
         </a>
+
+
+        <div
+            class="d-flex align-items-center gap-2 ms-auto"
+        >
+
+            <span
+                id="usernameDisplay"
+                class="badge text-bg-primary"
+            >
+            </span>
+
+
+            <button
+                id="logoutButton"
+                type="button"
+                class="btn btn-outline-light btn-sm"
+            >
+                Iziet
+            </button>
+
+        </div>
 
     </div>
 
 </nav>
 
 
-<div class="container mt-5">
+<div
+    class="container my-4"
+>
 
-
-    <!-- LIETOTĀJA VĀRDA IEVADE -->
 
     <div
-        id="loginSection"
-        class="row justify-content-center"
+        id="loadingMessage"
+        class="alert alert-light border"
     >
-
-        <div class="col-md-8">
-
-            <div class="card shadow">
-
-                <div class="card-body">
-
-                    <h2
-                        id="courseTitle"
-                        class="mb-3"
-                    >
-                        Čats
-                    </h2>
-
-
-                    <p class="text-secondary">
-                        Ievadi savu vārdu,
-                        lai pievienotos čatam.
-                    </p>
-
-
-                    <input
-                        type="text"
-                        id="usernameInput"
-                        class="form-control mb-3"
-                        placeholder="Tavs vārds"
-                        maxlength="30"
-                    >
-
-
-                    <div
-                        id="usernameError"
-                        class="alert alert-danger d-none"
-                    >
-                    </div>
-
-
-                    <button
-                        id="joinButton"
-                        class="btn btn-primary w-100"
-                    >
-                        Pievienoties čatam
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
+        Ielādē čatu...
     </div>
 
-
-    <!-- ČATS -->
 
     <div
         id="chatSection"
         class="d-none"
     >
 
-        <div class="row g-4">
+        <div
+            class="row g-4"
+        >
 
 
-            <!-- ZIŅAS -->
+            <div
+                class="col-lg-9"
+            >
 
-            <div class="col-lg-9">
+                <div
+                    class="card shadow"
+                >
 
-                <div class="card shadow">
+                    <div
+                        class="card-body"
+                    >
 
-                    <div class="card-body">
 
                         <div
-                            class="d-flex justify-content-between align-items-center mb-3"
+                            class="d-flex justify-content-between align-items-center gap-3 mb-3"
                         >
 
-                            <h2
-                                id="chatTitle"
-                                class="mb-0"
-                            >
-                                Čats
-                            </h2>
+                            <div>
+
+                                <h2
+                                    id="chatTitle"
+                                    class="mb-0"
+                                >
+                                    Čats
+                                </h2>
 
 
-                            <span
-                                id="usernameDisplay"
-                                class="badge text-bg-primary"
-                            >
-                            </span>
+                                <small
+                                    id="courseName"
+                                    class="text-secondary"
+                                >
+                                </small>
+
+                            </div>
 
                         </div>
 
 
-                        <!-- MEKLĒŠANA -->
+                        <!-- SEARCH -->
 
-                        <div class="input-group mb-3">
+                        <div
+                            class="input-group mb-3"
+                        >
 
                             <input
                                 type="text"
@@ -170,11 +163,12 @@
                         </div>
 
 
-                        <!-- ZIŅU SARAKSTS -->
+                        <!-- MESSAGES -->
 
                         <div
                             id="messages"
                             class="border rounded p-3 mb-3"
+                            style="max-height: 60vh; overflow-y: auto;"
                         >
 
                             <p
@@ -187,7 +181,7 @@
                         </div>
 
 
-                        <!-- ATBILDES PRIEKŠSKATĪJUMS -->
+                        <!-- REPLY PREVIEW -->
 
                         <div
                             id="replyPreview"
@@ -198,18 +192,26 @@
                                 class="d-flex justify-content-between align-items-start gap-3"
                             >
 
-                                <div>
+                                <div
+                                    class="overflow-hidden"
+                                >
 
-                                    <small class="text-secondary">
+                                    <small
+                                        class="text-secondary"
+                                    >
                                         Atbilde uz
                                     </small>
 
+
                                     <div>
+
                                         <strong
                                             id="replyUsername"
                                         >
                                         </strong>
+
                                     </div>
+
 
                                     <div
                                         id="replyText"
@@ -233,20 +235,24 @@
                         </div>
 
 
-                        <!-- ZIŅAS NOSŪTĪŠANA -->
+                        <!-- SEND -->
 
-                        <div class="input-group">
+                        <div
+                            class="input-group"
+                        >
 
                             <input
                                 type="text"
                                 id="messageInput"
                                 class="form-control"
+                                maxlength="2000"
                                 placeholder="Raksti ziņu..."
                             >
 
 
                             <button
                                 id="sendButton"
+                                type="button"
                                 class="btn btn-primary"
                             >
                                 Nosūtīt
@@ -268,13 +274,19 @@
             </div>
 
 
-            <!-- TIEŠSAISTES LIETOTĀJI -->
+            <!-- ONLINE -->
 
-            <div class="col-lg-3">
+            <div
+                class="col-lg-3"
+            >
 
-                <div class="card shadow">
+                <div
+                    class="card shadow"
+                >
 
-                    <div class="card-header">
+                    <div
+                        class="card-header"
+                    >
 
                         <div
                             class="d-flex justify-content-between align-items-center"
@@ -314,6 +326,7 @@
 
             </div>
 
+
         </div>
 
     </div>
@@ -326,9 +339,18 @@
 >
 </script>
 
-<script src="/socket.io/socket.io.js"></script>
 
-<script src="js/chat.js"></script>
+<script
+    src="/socket.io/socket.io.js"
+>
+</script>
+
+
+<script
+    src="js/chat.js"
+>
+</script>
+
 
 </body>
 

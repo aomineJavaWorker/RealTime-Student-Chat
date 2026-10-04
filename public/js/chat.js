@@ -1,50 +1,12 @@
-const params =
-    new URLSearchParams(
-        window.location.search
-    );
-
-
-const course =
-    params.get("course");
-
-
 const socket =
-    io();
+    io({
+        autoConnect: false
+    });
 
 
-const courseTitle =
+const loadingMessage =
     document.getElementById(
-        "courseTitle"
-    );
-
-
-const chatTitle =
-    document.getElementById(
-        "chatTitle"
-    );
-
-
-const usernameInput =
-    document.getElementById(
-        "usernameInput"
-    );
-
-
-const joinButton =
-    document.getElementById(
-        "joinButton"
-    );
-
-
-const usernameError =
-    document.getElementById(
-        "usernameError"
-    );
-
-
-const loginSection =
-    document.getElementById(
-        "loginSection"
+        "loadingMessage"
     );
 
 
@@ -54,9 +16,27 @@ const chatSection =
     );
 
 
+const chatTitle =
+    document.getElementById(
+        "chatTitle"
+    );
+
+
+const courseName =
+    document.getElementById(
+        "courseName"
+    );
+
+
 const usernameDisplay =
     document.getElementById(
         "usernameDisplay"
+    );
+
+
+const logoutButton =
+    document.getElementById(
+        "logoutButton"
     );
 
 
@@ -140,6 +120,7 @@ const searchEmpty =
 
 let currentUserId = null;
 let currentUsername = null;
+let currentCourseNumber = null;
 let currentReplyTo = null;
 
 
@@ -160,48 +141,121 @@ const reactionTypes = [
 
 
 // ==========================================
-// KURSA NOSAUKUMS
+// INITIALIZE CHAT
 // ==========================================
 
-if (course) {
+async function initializeChat() {
 
-    courseTitle.textContent =
-        `${course}. kursa čats`;
+    try {
 
-    chatTitle.textContent =
-        `${course}. kursa čats`;
+        const response =
+            await fetch(
+                "/api/auth/me"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !data.authenticated
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        currentUserId =
+            String(
+                data.user._id
+            );
+
+
+        currentUsername =
+            data.user.username;
+
+
+        currentCourseNumber =
+            Number(
+                data.user.courseNumber
+            );
+
+
+        usernameDisplay.textContent =
+            currentUsername;
+
+
+        chatTitle.textContent =
+            `${currentCourseNumber}. kursa čats`;
+
+
+        courseName.textContent =
+            data.user.courseName ||
+            `${currentCourseNumber}. kurss`;
+
+
+        loadingMessage.classList.add(
+            "d-none"
+        );
+
+
+        chatSection.classList.remove(
+            "d-none"
+        );
+
+
+        socket.connect();
+
+
+        await loadMessages();
+
+
+        messageInput.focus();
+
+    } catch (error) {
+
+        loadingMessage.classList.remove(
+            "alert-light"
+        );
+
+
+        loadingMessage.classList.add(
+            "alert-danger"
+        );
+
+
+        loadingMessage.textContent =
+            "Neizdevās ielādēt čatu.";
+
+
+        console.error(
+            error
+        );
+
+    }
 
 }
 
 
 // ==========================================
-// SOCKET.IO ISTABA
+// SOCKET ROOM
 // ==========================================
 
 function joinSocketCourse() {
 
-    if (
-        !currentUserId ||
-        !currentUsername
-    ) {
-
+    if (!currentUserId) {
         return;
-
     }
 
 
     socket.emit(
-        "joinCourse",
-        {
-            courseNumber:
-                Number(course),
-
-            userId:
-                currentUserId,
-
-            username:
-                currentUsername
-        }
+        "joinCourse"
     );
 
 }
@@ -217,8 +271,20 @@ socket.on(
 );
 
 
+socket.on(
+    "connect_error",
+    () => {
+
+        showMessageError(
+            "Neizdevās izveidot reāllaika savienojumu."
+        );
+
+    }
+);
+
+
 // ==========================================
-// IELĀDĒT ZIŅAS
+// LOAD MESSAGES
 // ==========================================
 
 async function loadMessages() {
@@ -227,12 +293,24 @@ async function loadMessages() {
 
         const response =
             await fetch(
-                `/api/messages?course=${course}`
+                "/api/messages"
             );
 
 
         const data =
             await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
 
 
         if (!response.ok) {
@@ -249,22 +327,11 @@ async function loadMessages() {
             "";
 
 
-        if (data.length === 0) {
+        if (
+            data.length === 0
+        ) {
 
-            messages.innerHTML = `
-                <p
-                    id="emptyMessages"
-                    class="text-secondary mb-0"
-                >
-                    Ziņu vēl nav.
-                </p>
-            `;
-
-
-            searchEmpty.classList.add(
-                "d-none"
-            );
-
+            showEmptyMessages();
 
             return;
 
@@ -272,17 +339,13 @@ async function loadMessages() {
 
 
         data.forEach(
-            (message) => {
-
-                addMessageToChat(
-                    message
-                );
-
-            }
+            addMessageToChat
         );
 
 
         applyMessageSearch();
+
+        scrollMessagesToBottom();
 
     } catch (error) {
 
@@ -296,138 +359,27 @@ async function loadMessages() {
 
 
 // ==========================================
-// PIEVIENOTIES ČATAM
-// ==========================================
-
-joinButton.addEventListener(
-    "click",
-    async () => {
-
-        const username =
-            usernameInput.value.trim();
-
-
-        if (username === "") {
-
-            usernameError.textContent =
-                "Lūdzu, ievadi savu vārdu!";
-
-            usernameError.classList.remove(
-                "d-none"
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            const response =
-                await fetch(
-                    "/api/users",
-                    {
-                        method:
-                            "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-                                username:
-                                    username,
-
-                                courseNumber:
-                                    Number(course)
-                            })
-                    }
-                );
-
-
-            const data =
-                await response.json();
-
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.message ||
-                    "Neizdevās pievienot lietotāju."
-                );
-
-            }
-
-
-            currentUserId =
-                data._id;
-
-
-            currentUsername =
-                data.username;
-
-
-            usernameDisplay.textContent =
-                data.username;
-
-
-            usernameError.classList.add(
-                "d-none"
-            );
-
-
-            loginSection.classList.add(
-                "d-none"
-            );
-
-
-            chatSection.classList.remove(
-                "d-none"
-            );
-
-
-            joinSocketCourse();
-
-
-            await loadMessages();
-
-
-            messageInput.focus();
-
-        } catch (error) {
-
-            usernameError.textContent =
-                error.message;
-
-            usernameError.classList.remove(
-                "d-none"
-            );
-
-        }
-
-    }
-);
-
-
-// ==========================================
-// PARĀDĪT ZIŅU
+// ADD MESSAGE TO UI
 // ==========================================
 
 function addMessageToChat(message) {
 
-    const emptyMessage =
-        document.getElementById(
-            "emptyMessages"
-        );
+    if (
+        messages.querySelector(
+            `[data-message-id="${message._id}"]`
+        )
+    ) {
 
-
-    if (emptyMessage) {
-
-        emptyMessage.remove();
+        return;
 
     }
+
+
+    document
+        .getElementById(
+            "emptyMessages"
+        )
+        ?.remove();
 
 
     const messageElement =
@@ -453,17 +405,21 @@ function addMessageToChat(message) {
 
 
     messageElement.dataset.username =
-        message.user?.username || "";
+        message.user?.username ||
+        "";
 
 
-    // Dubultklikšķis uz ziņas = 👍
+    // ======================================
+    // DOUBLE CLICK = LIKE
+    // ======================================
+
     messageElement.addEventListener(
         "dblclick",
         (event) => {
 
             if (
                 event.target.closest(
-                    "button"
+                    "button, a, input"
                 )
             ) {
 
@@ -481,6 +437,10 @@ function addMessageToChat(message) {
     );
 
 
+    // ======================================
+    // HEADER
+    // ======================================
+
     const messageHeader =
         document.createElement(
             "div"
@@ -491,7 +451,8 @@ function addMessageToChat(message) {
         "d-flex",
         "justify-content-between",
         "align-items-center",
-        "gap-2"
+        "gap-2",
+        "flex-wrap"
     );
 
 
@@ -520,6 +481,10 @@ function addMessageToChat(message) {
     );
 
 
+    // ======================================
+    // TIME
+    // ======================================
+
     const timeElement =
         document.createElement(
             "small"
@@ -533,23 +498,20 @@ function addMessageToChat(message) {
 
     if (message.createdAt) {
 
-        const messageDate =
+        timeElement.textContent =
             new Date(
                 message.createdAt
-            );
+            )
+                .toLocaleTimeString(
+                    "lv-LV",
+                    {
+                        hour:
+                            "2-digit",
 
-
-        timeElement.textContent =
-            messageDate.toLocaleTimeString(
-                "lv-LV",
-                {
-                    hour:
-                        "2-digit",
-
-                    minute:
-                        "2-digit"
-                }
-            );
+                        minute:
+                            "2-digit"
+                    }
+                );
 
     }
 
@@ -560,162 +522,18 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // REAKCIJU IZVĒLNE
+    // REACTION MENU
     // ======================================
-
-    const reactionDropdown =
-        document.createElement(
-            "div"
-        );
-
-
-    reactionDropdown.classList.add(
-        "dropdown"
-    );
-
-
-    const reactionMenuButton =
-        document.createElement(
-            "button"
-        );
-
-
-    reactionMenuButton.type =
-        "button";
-
-
-    reactionMenuButton.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-outline-secondary",
-        "dropdown-toggle"
-    );
-
-
-    reactionMenuButton.setAttribute(
-        "data-bs-toggle",
-        "dropdown"
-    );
-
-
-    reactionMenuButton.setAttribute(
-        "aria-expanded",
-        "false"
-    );
-
-
-    reactionMenuButton.textContent =
-        "😊";
-
-
-    const reactionMenu =
-        document.createElement(
-            "div"
-        );
-
-
-    reactionMenu.classList.add(
-        "dropdown-menu",
-        "p-2"
-    );
-
-
-    const reactionRow =
-        document.createElement(
-            "div"
-        );
-
-
-    reactionRow.classList.add(
-        "row",
-        "row-cols-4",
-        "g-1"
-    );
-
-
-    reactionTypes.forEach(
-        (reaction) => {
-
-            const column =
-                document.createElement(
-                    "div"
-                );
-
-
-            column.classList.add(
-                "col"
-            );
-
-
-            const button =
-                document.createElement(
-                    "button"
-                );
-
-
-            button.type =
-                "button";
-
-
-            button.classList.add(
-                "btn",
-                "btn-light",
-                "w-100"
-            );
-
-
-            button.textContent =
-                reaction;
-
-
-            button.addEventListener(
-                "click",
-                () => {
-
-                    toggleReaction(
-                        message._id,
-                        reaction
-                    );
-
-                }
-            );
-
-
-            column.appendChild(
-                button
-            );
-
-
-            reactionRow.appendChild(
-                column
-            );
-
-        }
-    );
-
-
-    reactionMenu.appendChild(
-        reactionRow
-    );
-
-
-    reactionDropdown.appendChild(
-        reactionMenuButton
-    );
-
-
-    reactionDropdown.appendChild(
-        reactionMenu
-    );
-
 
     rightSide.appendChild(
-        reactionDropdown
+        createReactionMenu(
+            message._id
+        )
     );
 
 
     // ======================================
-    // ATBILDĒT
+    // REPLY BUTTON
     // ======================================
 
     const replyButton =
@@ -744,7 +562,9 @@ function addMessageToChat(message) {
         () => {
 
             startReply(
-                message
+                message._id,
+                messageElement.dataset.username,
+                messageElement.dataset.messageText
             );
 
         }
@@ -757,13 +577,17 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // SAVAS ZIŅAS
+    // OWN MESSAGE BUTTONS
     // ======================================
 
     if (
         message.user &&
-        String(message.user._id) ===
-        String(currentUserId)
+        String(
+            message.user._id
+        ) ===
+        String(
+            currentUserId
+        )
     ) {
 
         const editButton =
@@ -863,7 +687,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // ATBILDE UZ ZIŅU
+    // REPLY MESSAGE
     // ======================================
 
     if (message.replyTo) {
@@ -875,12 +699,17 @@ function addMessageToChat(message) {
 
 
         replyElement.classList.add(
+            "reply-message",
             "border-start",
             "border-3",
             "ps-2",
             "my-2",
             "text-secondary"
         );
+
+
+        replyElement.dataset.replyToId =
+            message.replyTo._id;
 
 
         const replyUser =
@@ -906,6 +735,11 @@ function addMessageToChat(message) {
             );
 
 
+        replyMessageText.classList.add(
+            "reply-message-text"
+        );
+
+
         replyMessageText.textContent =
             message.replyTo.text ||
             "Ziņa nav pieejama";
@@ -929,7 +763,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // ZIŅAS TEKSTS
+    // MESSAGE TEXT
     // ======================================
 
     const textElement =
@@ -948,16 +782,7 @@ function addMessageToChat(message) {
         message.text;
 
 
-    if (
-        message.createdAt &&
-        message.updatedAt &&
-        new Date(
-            message.updatedAt
-        ).getTime() >
-        new Date(
-            message.createdAt
-        ).getTime()
-    ) {
+    if (message.editedAt) {
 
         addEditedLabel(
             textElement
@@ -972,7 +797,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // AKTĪVĀS REAKCIJAS
+    // REACTIONS
     // ======================================
 
     const reactionsContainer =
@@ -1009,7 +834,166 @@ function addMessageToChat(message) {
 
 
 // ==========================================
-// PARĀDĪT AKTĪVĀS REAKCIJAS
+// REACTION DROPDOWN
+// ==========================================
+
+function createReactionMenu(
+    messageId
+) {
+
+    const dropdown =
+        document.createElement(
+            "div"
+        );
+
+
+    dropdown.classList.add(
+        "dropdown"
+    );
+
+
+    const menuButton =
+        document.createElement(
+            "button"
+        );
+
+
+    menuButton.type =
+        "button";
+
+
+    menuButton.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-outline-secondary",
+        "dropdown-toggle"
+    );
+
+
+    menuButton.setAttribute(
+        "data-bs-toggle",
+        "dropdown"
+    );
+
+
+    menuButton.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+
+    menuButton.textContent =
+        "😊";
+
+
+    const menu =
+        document.createElement(
+            "div"
+        );
+
+
+    menu.classList.add(
+        "dropdown-menu",
+        "p-2"
+    );
+
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.classList.add(
+        "row",
+        "row-cols-4",
+        "g-1"
+    );
+
+
+    reactionTypes.forEach(
+        (reaction) => {
+
+            const column =
+                document.createElement(
+                    "div"
+                );
+
+
+            column.classList.add(
+                "col"
+            );
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.type =
+                "button";
+
+
+            button.classList.add(
+                "btn",
+                "btn-light",
+                "w-100"
+            );
+
+
+            button.textContent =
+                reaction;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    toggleReaction(
+                        messageId,
+                        reaction
+                    );
+
+                }
+            );
+
+
+            column.appendChild(
+                button
+            );
+
+
+            row.appendChild(
+                column
+            );
+
+        }
+    );
+
+
+    menu.appendChild(
+        row
+    );
+
+
+    dropdown.appendChild(
+        menuButton
+    );
+
+
+    dropdown.appendChild(
+        menu
+    );
+
+
+    return dropdown;
+
+}
+
+
+// ==========================================
+// RENDER REACTIONS
 // ==========================================
 
 function renderReactions(
@@ -1017,20 +1001,18 @@ function renderReactions(
     reactions
 ) {
 
-    const reactionsContainer =
+    const container =
         messageElement.querySelector(
             ".reactions-container"
         );
 
 
-    if (!reactionsContainer) {
-
+    if (!container) {
         return;
-
     }
 
 
-    reactionsContainer.innerHTML =
+    container.innerHTML =
         "";
 
 
@@ -1049,7 +1031,9 @@ function renderReactions(
 
                             if (
                                 typeof reaction.user ===
-                                "object"
+                                    "object" &&
+                                reaction.user !==
+                                    null
                             ) {
 
                                 return String(
@@ -1067,12 +1051,9 @@ function renderReactions(
                     );
 
 
-            const reactionCount =
-                reactionUsers.length;
-
-
             if (
-                reactionCount === 0
+                reactionUsers.length ===
+                0
             ) {
 
                 return;
@@ -1104,25 +1085,15 @@ function renderReactions(
             );
 
 
-            if (
+            button.classList.add(
                 currentUserReacted
-            ) {
-
-                button.classList.add(
-                    "btn-primary"
-                );
-
-            } else {
-
-                button.classList.add(
-                    "btn-outline-secondary"
-                );
-
-            }
+                    ? "btn-primary"
+                    : "btn-outline-secondary"
+            );
 
 
             button.textContent =
-                `${reactionType} ${reactionCount}`;
+                `${reactionType} ${reactionUsers.length}`;
 
 
             button.addEventListener(
@@ -1141,7 +1112,7 @@ function renderReactions(
             );
 
 
-            reactionsContainer.appendChild(
+            container.appendChild(
                 button
             );
 
@@ -1152,24 +1123,13 @@ function renderReactions(
 
 
 // ==========================================
-// PIEVIENOT / NOŅEMT REAKCIJU
+// TOGGLE REACTION
 // ==========================================
 
 async function toggleReaction(
     messageId,
     reaction
 ) {
-
-    if (!currentUserId) {
-
-        showMessageError(
-            "Lietotājs nav pievienojies čatam."
-        );
-
-        return;
-
-    }
-
 
     try {
 
@@ -1187,9 +1147,6 @@ async function toggleReaction(
 
                     body:
                         JSON.stringify({
-                            userId:
-                                currentUserId,
-
                             reaction:
                                 reaction
                         })
@@ -1199,6 +1156,18 @@ async function toggleReaction(
 
         const data =
             await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
 
 
         if (!response.ok) {
@@ -1225,7 +1194,7 @@ async function toggleReaction(
 
 
 // ==========================================
-// MEKLĒT ZIŅAS
+// SEARCH
 // ==========================================
 
 function applyMessageSearch() {
@@ -1242,7 +1211,8 @@ function applyMessageSearch() {
         );
 
 
-    let visibleMessages = 0;
+    let visibleMessages =
+        0;
 
 
     messageElements.forEach(
@@ -1271,19 +1241,15 @@ function applyMessageSearch() {
                 );
 
 
+            messageElement.classList.toggle(
+                "d-none",
+                !matches
+            );
+
+
             if (matches) {
 
-                messageElement.classList.remove(
-                    "d-none"
-                );
-
                 visibleMessages++;
-
-            } else {
-
-                messageElement.classList.add(
-                    "d-none"
-                );
 
             }
 
@@ -1291,23 +1257,13 @@ function applyMessageSearch() {
     );
 
 
-    if (
-        searchValue !== "" &&
-        messageElements.length > 0 &&
-        visibleMessages === 0
-    ) {
+    searchEmpty.classList.toggle(
+        "d-none",
 
-        searchEmpty.classList.remove(
-            "d-none"
-        );
-
-    } else {
-
-        searchEmpty.classList.add(
-            "d-none"
-        );
-
-    }
+        searchValue === "" ||
+        messageElements.length === 0 ||
+        visibleMessages > 0
+    );
 
 }
 
@@ -1336,30 +1292,33 @@ clearSearchButton.addEventListener(
 
 
 // ==========================================
-// SĀKT ATBILDI
+// REPLY
 // ==========================================
 
-function startReply(message) {
+function startReply(
+    messageId,
+    username,
+    text
+) {
 
     currentReplyTo = {
         id:
-            message._id,
+            messageId,
 
         username:
-            message.user?.username ||
-            "Nezināms lietotājs",
+            username,
 
         text:
-            message.text
+            text
     };
 
 
     replyUsername.textContent =
-        currentReplyTo.username;
+        username;
 
 
     replyText.textContent =
-        currentReplyTo.text;
+        text;
 
 
     replyPreview.classList.remove(
@@ -1371,10 +1330,6 @@ function startReply(message) {
 
 }
 
-
-// ==========================================
-// ATCELT ATBILDI
-// ==========================================
 
 function cancelReply() {
 
@@ -1404,24 +1359,18 @@ cancelReplyButton.addEventListener(
 
 
 // ==========================================
-// REDIĢĒTS
+// EDITED LABEL
 // ==========================================
 
 function addEditedLabel(
     textElement
 ) {
 
-    const oldLabel =
-        textElement.querySelector(
+    textElement
+        .querySelector(
             ".edited-label"
-        );
-
-
-    if (oldLabel) {
-
-        oldLabel.remove();
-
-    }
+        )
+        ?.remove();
 
 
     const editedElement =
@@ -1449,7 +1398,7 @@ function addEditedLabel(
 
 
 // ==========================================
-// REDIĢĒT ZIŅU
+// EDIT
 // ==========================================
 
 async function editMessage(
@@ -1464,7 +1413,9 @@ async function editMessage(
         );
 
 
-    if (newText === null) {
+    if (
+        newText === null
+    ) {
 
         return;
 
@@ -1475,7 +1426,7 @@ async function editMessage(
         newText.trim();
 
 
-    if (trimmedText === "") {
+    if (!trimmedText) {
 
         showMessageError(
             "Ziņa nevar būt tukša."
@@ -1503,10 +1454,7 @@ async function editMessage(
                     body:
                         JSON.stringify({
                             text:
-                                trimmedText,
-
-                            userId:
-                                currentUserId
+                                trimmedText
                         })
                 }
             );
@@ -1514,6 +1462,18 @@ async function editMessage(
 
         const data =
             await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
 
 
         if (!response.ok) {
@@ -1540,7 +1500,7 @@ async function editMessage(
 
 
 // ==========================================
-// DZĒST ZIŅU
+// DELETE
 // ==========================================
 
 async function deleteMessage(
@@ -1554,24 +1514,25 @@ async function deleteMessage(
                 `/api/messages/${messageId}`,
                 {
                     method:
-                        "DELETE",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            userId:
-                                currentUserId
-                        })
+                        "DELETE"
                 }
             );
 
 
         const data =
             await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
 
 
         if (!response.ok) {
@@ -1598,7 +1559,7 @@ async function deleteMessage(
 
 
 // ==========================================
-// JAUNA ZIŅA REAL-TIME
+// NEW MESSAGE REAL-TIME
 // ==========================================
 
 socket.on(
@@ -1612,12 +1573,14 @@ socket.on(
 
         applyMessageSearch();
 
+        scrollMessagesToBottom();
+
     }
 );
 
 
 // ==========================================
-// REDIĢĒŠANA REAL-TIME
+// EDIT REAL-TIME
 // ==========================================
 
 socket.on(
@@ -1630,39 +1593,64 @@ socket.on(
             );
 
 
-        if (!messageElement) {
+        if (messageElement) {
 
-            return;
+            messageElement
+                .dataset
+                .messageText =
+                    message.text;
+
+
+            const textElement =
+                messageElement.querySelector(
+                    ".message-text"
+                );
+
+
+            if (textElement) {
+
+                textElement.textContent =
+                    message.text;
+
+
+                addEditedLabel(
+                    textElement
+                );
+
+            }
 
         }
 
 
-        messageElement
-            .dataset
-            .messageText =
-            message.text;
+        messages
+            .querySelectorAll(
+                `[data-reply-to-id="${message._id}"] .reply-message-text`
+            )
+            .forEach(
+                (element) => {
 
+                    element.textContent =
+                        message.text;
 
-        const textElement =
-            messageElement.querySelector(
-                ".message-text"
+                }
             );
 
 
-        if (!textElement) {
+        if (
+            currentReplyTo?.id ===
+            String(
+                message._id
+            )
+        ) {
 
-            return;
+            currentReplyTo.text =
+                message.text;
+
+
+            replyText.textContent =
+                message.text;
 
         }
-
-
-        textElement.textContent =
-            message.text;
-
-
-        addEditedLabel(
-            textElement
-        );
 
 
         applyMessageSearch();
@@ -1672,7 +1660,7 @@ socket.on(
 
 
 // ==========================================
-// REAKCIJAS REAL-TIME
+// REACTION REAL-TIME
 // ==========================================
 
 socket.on(
@@ -1685,47 +1673,53 @@ socket.on(
             );
 
 
-        if (!messageElement) {
+        if (messageElement) {
 
-            return;
+            renderReactions(
+                messageElement,
+                data.reactions || []
+            );
 
         }
-
-
-        renderReactions(
-            messageElement,
-            data.reactions || []
-        );
 
     }
 );
 
 
 // ==========================================
-// DZĒŠANA REAL-TIME
+// DELETE REAL-TIME
 // ==========================================
 
 socket.on(
     "messageDeleted",
     (messageId) => {
 
-        const messageElement =
-            messages.querySelector(
+        messages
+            .querySelector(
                 `[data-message-id="${messageId}"]`
+            )
+            ?.remove();
+
+
+        messages
+            .querySelectorAll(
+                `[data-reply-to-id="${messageId}"] .reply-message-text`
+            )
+            .forEach(
+                (element) => {
+
+                    element.textContent =
+                        "Ziņa izdzēsta";
+
+                }
             );
 
 
-        if (messageElement) {
-
-            messageElement.remove();
-
-        }
-
-
         if (
-            currentReplyTo &&
-            currentReplyTo.id ===
-            messageId
+            currentReplyTo?.id ===
+            String(
+                messageId
+            )
         ) {
 
             cancelReply();
@@ -1733,24 +1727,16 @@ socket.on(
         }
 
 
-        const remainingMessages =
-            messages.querySelectorAll(
-                ".chat-message"
-            );
-
-
         if (
-            remainingMessages.length === 0
+            messages
+                .querySelectorAll(
+                    ".chat-message"
+                )
+                .length ===
+            0
         ) {
 
-            messages.innerHTML = `
-                <p
-                    id="emptyMessages"
-                    class="text-secondary mb-0"
-                >
-                    Ziņu vēl nav.
-                </p>
-            `;
+            showEmptyMessages();
 
         }
 
@@ -1762,7 +1748,7 @@ socket.on(
 
 
 // ==========================================
-// TIEŠSAISTES LIETOTĀJI
+// ONLINE USERS
 // ==========================================
 
 socket.on(
@@ -1777,12 +1763,12 @@ socket.on(
             "";
 
 
-        if (users.length === 0) {
+        if (
+            users.length === 0
+        ) {
 
             onlineUsers.innerHTML = `
-                <div
-                    class="list-group-item text-secondary"
-                >
+                <div class="list-group-item text-secondary">
                     Neviens nav tiešsaistē.
                 </div>
             `;
@@ -1809,46 +1795,48 @@ socket.on(
                 );
 
 
-                const statusBadge =
+                const status =
                     document.createElement(
                         "span"
                     );
 
 
-                statusBadge.classList.add(
-                    "badge",
-                    "rounded-pill",
-                    "text-bg-success"
+                status.classList.add(
+                    "text-success"
                 );
 
 
-                statusBadge.textContent =
+                status.textContent =
                     "●";
 
 
-                const nameElement =
+                const name =
                     document.createElement(
                         "span"
                     );
 
 
-                nameElement.textContent =
+                name.textContent =
                     user.username;
 
 
                 userElement.appendChild(
-                    statusBadge
+                    status
                 );
 
 
                 userElement.appendChild(
-                    nameElement
+                    name
                 );
 
 
                 if (
-                    String(user.userId) ===
-                    String(currentUserId)
+                    String(
+                        user.userId
+                    ) ===
+                    String(
+                        currentUserId
+                    )
                 ) {
 
                     const youBadge =
@@ -1887,69 +1875,158 @@ socket.on(
 
 
 // ==========================================
-// NOSŪTĪT ZIŅU
+// SEND MESSAGE
 // ==========================================
 
 sendButton.addEventListener(
     "click",
+    sendMessage
+);
+
+
+async function sendMessage() {
+
+    const text =
+        messageInput.value.trim();
+
+
+    if (!text) {
+
+        showMessageError(
+            "Lūdzu, ievadi ziņu!"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        sendButton.disabled =
+            true;
+
+
+        const response =
+            await fetch(
+                "/api/messages",
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            text:
+                                text,
+
+                            replyToId:
+                                currentReplyTo?.id ||
+                                null
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās nosūtīt ziņu."
+            );
+
+        }
+
+
+        messageInput.value =
+            "";
+
+
+        cancelReply();
+
+        hideMessageError();
+
+        messageInput.focus();
+
+    } catch (error) {
+
+        showMessageError(
+            error.message
+        );
+
+    } finally {
+
+        sendButton.disabled =
+            false;
+
+    }
+
+}
+
+
+// ==========================================
+// ENTER
+// ==========================================
+
+messageInput.addEventListener(
+    "keydown",
+    (event) => {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// LOGOUT
+// ==========================================
+
+logoutButton.addEventListener(
+    "click",
     async () => {
-
-        const messageText =
-            messageInput.value.trim();
-
-
-        if (messageText === "") {
-
-            showMessageError(
-                "Lūdzu, ievadi ziņu!"
-            );
-
-            return;
-
-        }
-
-
-        if (!currentUserId) {
-
-            showMessageError(
-                "Lietotājs nav pievienojies čatam."
-            );
-
-            return;
-
-        }
-
 
         try {
 
+            logoutButton.disabled =
+                true;
+
+
             const response =
                 await fetch(
-                    "/api/messages",
+                    "/api/auth/logout",
                     {
                         method:
-                            "POST",
-
-                        headers: {
-                            "Content-Type":
-                                "application/json"
-                        },
-
-                        body:
-                            JSON.stringify({
-                                text:
-                                    messageText,
-
-                                userId:
-                                    currentUserId,
-
-                                courseNumber:
-                                    Number(course),
-
-                                replyToId:
-                                    currentReplyTo
-                                        ? currentReplyTo.id
-                                        : null
-                            })
+                            "POST"
                     }
                 );
 
@@ -1962,21 +2039,17 @@ sendButton.addEventListener(
 
                 throw new Error(
                     data.message ||
-                    "Neizdevās nosūtīt ziņu."
+                    "Neizdevās izrakstīties."
                 );
 
             }
 
 
-            messageInput.value =
-                "";
+            socket.disconnect();
 
 
-            cancelReply();
-
-            hideMessageError();
-
-            messageInput.focus();
+            window.location.href =
+                "/";
 
         } catch (error) {
 
@@ -1984,25 +2057,9 @@ sendButton.addEventListener(
                 error.message
             );
 
-        }
 
-    }
-);
-
-
-// ==========================================
-// ENTER = NOSŪTĪT
-// ==========================================
-
-messageInput.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (
-            event.key === "Enter"
-        ) {
-
-            sendButton.click();
+            logoutButton.disabled =
+                false;
 
         }
 
@@ -2011,12 +2068,32 @@ messageInput.addEventListener(
 
 
 // ==========================================
-// KĻŪDAS
+// HELPERS
 // ==========================================
 
-function showMessageError(
-    message
-) {
+function showEmptyMessages() {
+
+    messages.innerHTML = `
+        <p
+            id="emptyMessages"
+            class="text-secondary mb-0"
+        >
+            Ziņu vēl nav.
+        </p>
+    `;
+
+}
+
+
+function scrollMessagesToBottom() {
+
+    messages.scrollTop =
+        messages.scrollHeight;
+
+}
+
+
+function showMessageError(message) {
 
     messageError.textContent =
         message;
@@ -2036,3 +2113,10 @@ function hideMessageError() {
     );
 
 }
+
+
+// ==========================================
+// START
+// ==========================================
+
+initializeChat();

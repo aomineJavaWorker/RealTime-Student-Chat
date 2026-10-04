@@ -1,12 +1,27 @@
 const mongoose = require("mongoose");
 
+
 const userSchema = new mongoose.Schema(
     {
         username: {
             type: String,
             required: true,
             trim: true,
+            minlength: 3,
             maxlength: 30
+        },
+
+        usernameKey: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true
+        },
+
+        passwordHash: {
+            type: String,
+            required: true,
+            select: false
         },
 
         course: {
@@ -20,4 +35,25 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("User", userSchema);
+
+userSchema.index(
+    {
+        usernameKey: 1,
+        course: 1
+    },
+    {
+        unique: true,
+
+        partialFilterExpression: {
+            usernameKey: {
+                $type: "string"
+            }
+        }
+    }
+);
+
+
+module.exports = mongoose.model(
+    "User",
+    userSchema
+);

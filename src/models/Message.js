@@ -63,6 +63,11 @@ const messageSchema = new mongoose.Schema(
         reactions: {
             type: [reactionSchema],
             default: []
+        },
+
+        editedAt: {
+            type: Date,
+            default: null
         }
     },
     {

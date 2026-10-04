@@ -2,12 +2,14 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const http = require("http");
+const session = require("express-session");
+const { MongoStore } = require("connect-mongo");
 const { Server } = require("socket.io");
 
 require("dotenv").config();
 
 const courseRoutes = require("./src/routes/courses");
-const userRoutes = require("./src/routes/users");
+const authRoutes = require("./src/routes/auth");
 const messageRoutes = require("./src/routes/messages");
 
 const Course = require("./src/models/Course");
@@ -17,22 +19,64 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
+const isProduction = process.env.NODE_ENV === "production";
+
+
+if (isProduction) {
+    app.set("trust proxy", 1);
+}
+
+
+if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI nav konfigurēts.");
+}
+
+
+if (!process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET nav konfigurēts.");
+}
 
 
 // ==========================================
-// SOCKET.IO PIEEJAMS ROUTES FAILOS
+// SESSION
 // ==========================================
 
-app.use((req, res, next) => {
+const sessionMiddleware = session({
+    name: "studentChatSession",
 
-    req.io = io;
+    secret: process.env.SESSION_SECRET,
 
-    next();
+    resave: false,
 
+    saveUninitialized: false,
+
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        collectionName: "sessions"
+    }),
+
+    cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProduction,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
 });
 
 
+app.use(sessionMiddleware);
+
+
+// Socket.IO arī izmanto to pašu session
+io.engine.use(sessionMiddleware);
+
+
+// ==========================================
+// EXPRESS
+// ==========================================
+
 app.use(express.json());
+
 
 app.use(
     express.static(
@@ -41,16 +85,42 @@ app.use(
 );
 
 
-app.use("/api/courses", courseRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/messages", messageRoutes);
+// ==========================================
+// SOCKET.IO PIEEJAMS ROUTES
+// ==========================================
+
+app.use((req, res, next) => {
+    req.io = io;
+    next();
+});
 
 
 // ==========================================
-// TIEŠSAISTES LIETOTĀJI
+// ROUTES
 // ==========================================
 
-// socket.id -> lietotāja informācija
+app.use(
+    "/api/courses",
+    courseRoutes
+);
+
+
+app.use(
+    "/api/auth",
+    authRoutes
+);
+
+
+app.use(
+    "/api/messages",
+    messageRoutes
+);
+
+
+// ==========================================
+// ONLINE USERS
+// ==========================================
+
 const onlineUsers = new Map();
 
 
@@ -85,17 +155,13 @@ function getOnlineUsersForCourse(courseNumber) {
 
 function sendOnlineUsers(courseNumber) {
 
-    const users =
-        getOnlineUsersForCourse(
-            courseNumber
-        );
-
-
     io
         .to(`course-${courseNumber}`)
         .emit(
             "onlineUsers",
-            users
+            getOnlineUsersForCourse(
+                courseNumber
+            )
         );
 
 }
@@ -105,133 +171,145 @@ function sendOnlineUsers(courseNumber) {
 // SOCKET.IO
 // ==========================================
 
-io.on("connection", (socket) => {
+io.on(
+    "connection",
+    (socket) => {
 
-    console.log(
-        "Lietotājs pieslēdzās:",
-        socket.id
-    );
-
-
-    socket.on(
-        "joinCourse",
-        (data) => {
-
-            const courseNumber =
-                Number(data.courseNumber);
-
-            const userId =
-                data.userId;
-
-            const username =
-                data.username?.trim();
+        console.log(
+            "Lietotājs pieslēdzās:",
+            socket.id
+        );
 
 
-            if (
-                !courseNumber ||
-                !userId ||
-                !username
-            ) {
+        socket.on(
+            "joinCourse",
+            () => {
 
-                return;
-
-            }
+                const sessionData =
+                    socket.request.session;
 
 
-            // Ja socket jau bija citā kursā
-            const previousUser =
-                onlineUsers.get(
-                    socket.id
-                );
+                if (
+                    !sessionData ||
+                    !sessionData.userId ||
+                    !sessionData.username ||
+                    !sessionData.courseNumber
+                ) {
 
+                    return;
 
-            if (previousUser) {
-
-                socket.leave(
-                    `course-${previousUser.courseNumber}`
-                );
-
-                onlineUsers.delete(
-                    socket.id
-                );
-
-
-                sendOnlineUsers(
-                    previousUser.courseNumber
-                );
-
-            }
-
-
-            const roomName =
-                `course-${courseNumber}`;
-
-
-            socket.join(
-                roomName
-            );
-
-
-            onlineUsers.set(
-                socket.id,
-                {
-                    userId,
-                    username,
-                    courseNumber
                 }
-            );
 
 
-            console.log(
-                `${username} pievienojās ${roomName}`
-            );
+                const userId =
+                    String(
+                        sessionData.userId
+                    );
 
 
-            sendOnlineUsers(
-                courseNumber
-            );
-
-        }
-    );
+                const username =
+                    String(
+                        sessionData.username
+                    );
 
 
-    socket.on(
-        "disconnect",
-        () => {
+                const courseNumber =
+                    Number(
+                        sessionData.courseNumber
+                    );
 
-            const user =
-                onlineUsers.get(
-                    socket.id
+
+                const previousUser =
+                    onlineUsers.get(
+                        socket.id
+                    );
+
+
+                if (previousUser) {
+
+                    socket.leave(
+                        `course-${previousUser.courseNumber}`
+                    );
+
+
+                    onlineUsers.delete(
+                        socket.id
+                    );
+
+
+                    sendOnlineUsers(
+                        previousUser.courseNumber
+                    );
+
+                }
+
+
+                socket.join(
+                    `course-${courseNumber}`
                 );
 
 
-            if (user) {
+                onlineUsers.set(
+                    socket.id,
+                    {
+                        userId,
+                        username,
+                        courseNumber
+                    }
+                );
 
-                onlineUsers.delete(
-                    socket.id
+
+                console.log(
+                    `${username} pievienojās course-${courseNumber}`
                 );
 
 
                 sendOnlineUsers(
-                    user.courseNumber
+                    courseNumber
                 );
 
             }
+        );
 
 
-            console.log(
-                "Lietotājs atvienojās:",
-                socket.id
-            );
+        socket.on(
+            "disconnect",
+            () => {
 
-        }
-    );
+                const user =
+                    onlineUsers.get(
+                        socket.id
+                    );
 
-});
+
+                if (user) {
+
+                    onlineUsers.delete(
+                        socket.id
+                    );
+
+
+                    sendOnlineUsers(
+                        user.courseNumber
+                    );
+
+                }
+
+
+                console.log(
+                    "Lietotājs atvienojās:",
+                    socket.id
+                );
+
+            }
+        );
+
+    }
+);
 
 
 // ==========================================
-// NOKLUSĒJUMA KURSI
+// DEFAULT COURSES
 // ==========================================
 
 async function createDefaultCourses() {
@@ -241,14 +319,17 @@ async function createDefaultCourses() {
             number: 1,
             name: "1. kurss"
         },
+
         {
             number: 2,
             name: "2. kurss"
         },
+
         {
             number: 3,
             name: "3. kurss"
         },
+
         {
             number: 4,
             name: "4. kurss"
@@ -260,13 +341,18 @@ async function createDefaultCourses() {
 
         await Course.updateOne(
             {
-                number: course.number
+                number:
+                    course.number
             },
+
             {
-                $set: course
+                $set:
+                    course
             },
+
             {
-                upsert: true
+                upsert:
+                    true
             }
         );
 
@@ -276,7 +362,7 @@ async function createDefaultCourses() {
 
 
 // ==========================================
-// SERVERA PALAIŠANA
+// START SERVER
 // ==========================================
 
 async function startServer() {
@@ -310,9 +396,12 @@ async function startServer() {
     } catch (error) {
 
         console.error(
-            "MongoDB savienojuma kļūda:",
+            "Servera palaišanas kļūda:",
             error
         );
+
+
+        process.exitCode = 1;
 
     }
 

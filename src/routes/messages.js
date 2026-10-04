@@ -2,7 +2,6 @@ const express = require("express");
 
 const Message = require("../models/Message");
 const Course = require("../models/Course");
-const User = require("../models/User");
 
 const router = express.Router();
 
@@ -24,401 +23,501 @@ const allowedReactions = [
 
 
 // ==========================================
-// SAŅEMT ZIŅAS
+// AUTH CHECK
 // ==========================================
 
-router.get("/", async (req, res) => {
-
-    try {
-
-        const courseNumber =
-            Number(req.query.course);
-
-
-        const course =
-            await Course.findOne({
-                number: courseNumber
-            });
-
-
-        if (!course) {
-
-            return res.status(404).json({
-                message: "Kurss nav atrasts."
-            });
-
-        }
-
-
-        const messages =
-            await Message.find({
-                course: course._id
-            })
-                .populate(
-                    "user",
-                    "username"
-                )
-                .populate({
-                    path: "replyTo",
-                    populate: {
-                        path: "user",
-                        select: "username"
-                    }
-                })
-                .sort({
-                    createdAt: 1
-                });
-
-
-        res.json(messages);
-
-    } catch (error) {
-
-        console.error(
-            "Ziņu iegūšanas kļūda:",
-            error
-        );
-
-
-        res.status(500).json({
-            message:
-                "Neizdevās iegūt ziņas."
-        });
-
-    }
-
-});
-
-
-// ==========================================
-// IZVEIDOT ZIŅU
-// ==========================================
-
-router.post("/", async (req, res) => {
-
-    try {
-
-        const {
-            text,
-            userId,
-            courseNumber,
-            replyToId
-        } = req.body;
-
+router.use(
+    (req, res, next) => {
 
         if (
-            !text ||
-            !userId ||
-            !courseNumber
+            !req.session?.userId ||
+            !req.session?.courseNumber
         ) {
 
-            return res.status(400).json({
-                message:
-                    "Trūkst nepieciešamo datu."
-            });
+            return res
+                .status(401)
+                .json({
+                    message:
+                        "Nepieciešama autorizācija."
+                });
 
         }
 
 
-        const trimmedText =
-            text.trim();
+        next();
+
+    }
+);
 
 
-        if (trimmedText === "") {
+async function getSessionCourse(req) {
 
-            return res.status(400).json({
-                message:
-                    "Ziņa nevar būt tukša."
-            });
+    return Course.findOne({
+        number:
+            Number(
+                req.session.courseNumber
+            )
+    });
 
-        }
-
-
-        const course =
-            await Course.findOne({
-                number: courseNumber
-            });
+}
 
 
-        if (!course) {
+// ==========================================
+// GET MESSAGES
+// ==========================================
 
-            return res.status(404).json({
-                message:
-                    "Kurss nav atrasts."
-            });
+router.get(
+    "/",
+    async (req, res) => {
 
-        }
+        try {
 
-
-        const user =
-            await User.findById(
-                userId
-            );
-
-
-        if (!user) {
-
-            return res.status(404).json({
-                message:
-                    "Lietotājs nav atrasts."
-            });
-
-        }
-
-
-        let replyTo = null;
-
-
-        if (replyToId) {
-
-            const replyMessage =
-                await Message.findById(
-                    replyToId
+            const course =
+                await getSessionCourse(
+                    req
                 );
 
 
-            if (!replyMessage) {
+            if (!course) {
 
-                return res.status(404).json({
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
+
+            }
+
+
+            const messages =
+                await Message.find({
+                    course:
+                        course._id
+                })
+                    .populate(
+                        "user",
+                        "username"
+                    )
+                    .populate({
+                        path:
+                            "replyTo",
+
+                        populate: {
+                            path:
+                                "user",
+
+                            select:
+                                "username"
+                        }
+                    })
+                    .sort({
+                        createdAt:
+                            1
+                    });
+
+
+            res.json(
+                messages
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Ziņu iegūšanas kļūda:",
+                error
+            );
+
+
+            res
+                .status(500)
+                .json({
                     message:
-                        "Atbildes ziņa nav atrasta."
+                        "Neizdevās iegūt ziņas."
                 });
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// CREATE MESSAGE
+// ==========================================
+
+router.post(
+    "/",
+    async (req, res) => {
+
+        try {
+
+            const text =
+                req.body.text?.trim();
+
+
+            const replyToId =
+                req.body.replyToId ||
+                null;
+
+
+            const userId =
+                req.session.userId;
+
+
+            const courseNumber =
+                Number(
+                    req.session.courseNumber
+                );
+
+
+            if (!text) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa nevar būt tukša."
+                    });
 
             }
 
 
             if (
-                replyMessage.course.toString() !==
-                course._id.toString()
+                text.length > 2000
             ) {
 
-                return res.status(400).json({
-                    message:
-                        "Nevar atbildēt uz cita kursa ziņu."
-                });
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa ir pārāk gara."
+                    });
 
             }
 
 
-            replyTo =
-                replyMessage._id;
-
-        }
-
-
-        const createdMessage =
-            await Message.create({
-                text:
-                    trimmedText,
-
-                user:
-                    userId,
-
-                course:
-                    course._id,
-
-                replyTo:
-                    replyTo
-            });
-
-
-        const message =
-            await Message.findById(
-                createdMessage._id
-            )
-                .populate(
-                    "user",
-                    "username"
-                )
-                .populate({
-                    path: "replyTo",
-                    populate: {
-                        path: "user",
-                        select: "username"
-                    }
-                });
-
-
-        const messageData =
-            message.toObject();
-
-
-        req.io
-            .to(
-                `course-${courseNumber}`
-            )
-            .emit(
-                "newMessage",
-                messageData
-            );
-
-
-        res.status(201).json(
-            messageData
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Ziņas nosūtīšanas kļūda:",
-            error
-        );
-
-
-        res.status(500).json({
-            message:
-                "Neizdevās nosūtīt ziņu."
-        });
-
-    }
-
-});
-
-
-// ==========================================
-// REDIĢĒT ZIŅU
-// ==========================================
-
-router.put("/:id", async (req, res) => {
-
-    try {
-
-        const {
-            text,
-            userId
-        } = req.body;
-
-
-        if (
-            !text ||
-            !userId
-        ) {
-
-            return res.status(400).json({
-                message:
-                    "Trūkst nepieciešamo datu."
-            });
-
-        }
-
-
-        let message =
-            await Message.findById(
-                req.params.id
-            )
-                .populate(
-                    "user",
-                    "username"
-                )
-                .populate(
-                    "course",
-                    "number"
+            const course =
+                await getSessionCourse(
+                    req
                 );
 
 
-        if (!message) {
+            if (!course) {
 
-            return res.status(404).json({
-                message:
-                    "Ziņa nav atrasta."
-            });
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
 
-        }
-
-
-        if (
-            message.user._id.toString() !==
-            userId
-        ) {
-
-            return res.status(403).json({
-                message:
-                    "Tu nevari rediģēt cita lietotāja ziņu."
-            });
-
-        }
+            }
 
 
-        const newText =
-            text.trim();
+            let replyTo =
+                null;
 
 
-        if (newText === "") {
+            if (replyToId) {
 
-            return res.status(400).json({
-                message:
-                    "Ziņa nevar būt tukša."
-            });
-
-        }
+                const replyMessage =
+                    await Message.findById(
+                        replyToId
+                    );
 
 
-        const courseNumber =
-            message.course.number;
+                if (!replyMessage) {
+
+                    return res
+                        .status(404)
+                        .json({
+                            message:
+                                "Atbildes ziņa nav atrasta."
+                        });
+
+                }
 
 
-        message.text =
-            newText;
+                if (
+                    replyMessage.course.toString() !==
+                    course._id.toString()
+                ) {
+
+                    return res
+                        .status(403)
+                        .json({
+                            message:
+                                "Nevar atbildēt uz cita kursa ziņu."
+                        });
+
+                }
 
 
-        await message.save();
+                replyTo =
+                    replyMessage._id;
+
+            }
 
 
-        message =
-            await Message.findById(
-                message._id
-            )
-                .populate(
-                    "user",
-                    "username"
-                )
-                .populate({
-                    path: "replyTo",
-                    populate: {
-                        path: "user",
-                        select: "username"
-                    }
+            const createdMessage =
+                await Message.create({
+                    text:
+                        text,
+
+                    user:
+                        userId,
+
+                    course:
+                        course._id,
+
+                    replyTo:
+                        replyTo
                 });
 
 
-        const messageData =
-            message.toObject();
+            const message =
+                await Message.findById(
+                    createdMessage._id
+                )
+                    .populate(
+                        "user",
+                        "username"
+                    )
+                    .populate({
+                        path:
+                            "replyTo",
+
+                        populate: {
+                            path:
+                                "user",
+
+                            select:
+                                "username"
+                        }
+                    });
 
 
-        req.io
-            .to(
-                `course-${courseNumber}`
-            )
-            .emit(
-                "messageUpdated",
-                messageData
+            const messageData =
+                message.toObject();
+
+
+            req.io
+                .to(
+                    `course-${courseNumber}`
+                )
+                .emit(
+                    "newMessage",
+                    messageData
+                );
+
+
+            res
+                .status(201)
+                .json(
+                    messageData
+                );
+
+        } catch (error) {
+
+            console.error(
+                "Ziņas nosūtīšanas kļūda:",
+                error
             );
 
 
-        res.json(
-            messageData
-        );
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās nosūtīt ziņu."
+                });
 
-    } catch (error) {
-
-        console.error(
-            "Ziņas rediģēšanas kļūda:",
-            error
-        );
-
-
-        res.status(500).json({
-            message:
-                "Neizdevās rediģēt ziņu."
-        });
+        }
 
     }
-
-});
+);
 
 
 // ==========================================
-// REAKCIJAS
+// EDIT MESSAGE
+// ==========================================
+
+router.put(
+    "/:id",
+    async (req, res) => {
+
+        try {
+
+            const userId =
+                req.session.userId;
+
+
+            const courseNumber =
+                Number(
+                    req.session.courseNumber
+                );
+
+
+            const newText =
+                req.body.text?.trim();
+
+
+            if (!newText) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa nevar būt tukša."
+                    });
+
+            }
+
+
+            if (
+                newText.length > 2000
+            ) {
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa ir pārāk gara."
+                    });
+
+            }
+
+
+            const message =
+                await Message.findById(
+                    req.params.id
+                );
+
+
+            if (!message) {
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Ziņa nav atrasta."
+                    });
+
+            }
+
+
+            if (
+                message.user.toString() !==
+                userId
+            ) {
+
+                return res
+                    .status(403)
+                    .json({
+                        message:
+                            "Tu nevari rediģēt cita lietotāja ziņu."
+                    });
+
+            }
+
+
+            const course =
+                await getSessionCourse(
+                    req
+                );
+
+
+            if (
+                !course ||
+                message.course.toString() !==
+                course._id.toString()
+            ) {
+
+                return res
+                    .status(403)
+                    .json({
+                        message:
+                            "Ziņa nepieder tavam kursam."
+                    });
+
+            }
+
+
+            message.text =
+                newText;
+
+
+            message.editedAt =
+                new Date();
+
+
+            await message.save();
+
+
+            const updatedMessage =
+                await Message.findById(
+                    message._id
+                )
+                    .populate(
+                        "user",
+                        "username"
+                    )
+                    .populate({
+                        path:
+                            "replyTo",
+
+                        populate: {
+                            path:
+                                "user",
+
+                            select:
+                                "username"
+                        }
+                    });
+
+
+            const messageData =
+                updatedMessage.toObject();
+
+
+            req.io
+                .to(
+                    `course-${courseNumber}`
+                )
+                .emit(
+                    "messageUpdated",
+                    messageData
+                );
+
+
+            res.json(
+                messageData
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Ziņas rediģēšanas kļūda:",
+                error
+            );
+
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās rediģēt ziņu."
+                });
+
+        }
+
+    }
+);
+
+
+// ==========================================
+// REACTION
 // ==========================================
 
 router.post(
@@ -427,23 +526,18 @@ router.post(
 
         try {
 
-            const {
-                userId,
-                reaction
-            } = req.body;
+            const userId =
+                req.session.userId;
 
 
-            if (
-                !userId ||
-                !reaction
-            ) {
+            const courseNumber =
+                Number(
+                    req.session.courseNumber
+                );
 
-                return res.status(400).json({
-                    message:
-                        "Trūkst reakcijas datu."
-                });
 
-            }
+            const reaction =
+                req.body.reaction;
 
 
             if (
@@ -452,26 +546,12 @@ router.post(
                 )
             ) {
 
-                return res.status(400).json({
-                    message:
-                        "Nederīga reakcija."
-                });
-
-            }
-
-
-            const user =
-                await User.findById(
-                    userId
-                );
-
-
-            if (!user) {
-
-                return res.status(404).json({
-                    message:
-                        "Lietotājs nav atrasts."
-                });
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Nederīga reakcija."
+                    });
 
             }
 
@@ -479,19 +559,39 @@ router.post(
             const message =
                 await Message.findById(
                     req.params.id
-                )
-                    .populate(
-                        "course",
-                        "number"
-                    );
+                );
 
 
             if (!message) {
 
-                return res.status(404).json({
-                    message:
-                        "Ziņa nav atrasta."
-                });
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Ziņa nav atrasta."
+                    });
+
+            }
+
+
+            const course =
+                await getSessionCourse(
+                    req
+                );
+
+
+            if (
+                !course ||
+                message.course.toString() !==
+                course._id.toString()
+            ) {
+
+                return res
+                    .status(403)
+                    .json({
+                        message:
+                            "Ziņa nepieder tavam kursam."
+                    });
 
             }
 
@@ -504,19 +604,20 @@ router.post(
                 );
 
 
-            if (reactionIndex !== -1) {
-
-                const currentReaction =
-                    message.reactions[
-                        reactionIndex
-                    ];
-
+            if (
+                reactionIndex !== -1
+            ) {
 
                 if (
-                    currentReaction.type ===
+                    message
+                        .reactions[
+                            reactionIndex
+                        ]
+                        .type ===
                     reaction
                 ) {
 
+                    // Same reaction -> remove
                     message.reactions.splice(
                         reactionIndex,
                         1
@@ -524,7 +625,10 @@ router.post(
 
                 } else {
 
-                    currentReaction.type =
+                    // Another reaction -> replace
+                    message.reactions[
+                        reactionIndex
+                    ].type =
                         reaction;
 
                 }
@@ -545,30 +649,26 @@ router.post(
             await message.save();
 
 
-            const reactions =
-                message.reactions.map(
-                    (item) => ({
-                        user:
-                            item.user.toString(),
-
-                        type:
-                            item.type
-                    })
-                );
-
-
             const reactionData = {
                 messageId:
                     message._id.toString(),
 
                 reactions:
-                    reactions
+                    message.reactions.map(
+                        (item) => ({
+                            user:
+                                item.user.toString(),
+
+                            type:
+                                item.type
+                        })
+                    )
             };
 
 
             req.io
                 .to(
-                    `course-${message.course.number}`
+                    `course-${courseNumber}`
                 )
                 .emit(
                     "messageReactionUpdated",
@@ -588,10 +688,12 @@ router.post(
             );
 
 
-            res.status(500).json({
-                message:
-                    "Neizdevās saglabāt reakciju."
-            });
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās saglabāt reakciju."
+                });
 
         }
 
@@ -600,101 +702,119 @@ router.post(
 
 
 // ==========================================
-// DZĒST ZIŅU
+// DELETE MESSAGE
 // ==========================================
 
-router.delete("/:id", async (req, res) => {
+router.delete(
+    "/:id",
+    async (req, res) => {
 
-    try {
+        try {
 
-        const {
-            userId
-        } = req.body;
-
-
-        if (!userId) {
-
-            return res.status(400).json({
-                message:
-                    "Nav norādīts lietotājs."
-            });
-
-        }
+            const userId =
+                req.session.userId;
 
 
-        const message =
-            await Message.findById(
-                req.params.id
-            )
-                .populate(
-                    "course",
-                    "number"
+            const courseNumber =
+                Number(
+                    req.session.courseNumber
                 );
 
 
-        if (!message) {
-
-            return res.status(404).json({
-                message:
-                    "Ziņa nav atrasta."
-            });
-
-        }
+            const message =
+                await Message.findById(
+                    req.params.id
+                );
 
 
-        if (
-            message.user.toString() !==
-            userId
-        ) {
+            if (!message) {
 
-            return res.status(403).json({
-                message:
-                    "Tu nevari dzēst cita lietotāja ziņu."
-            });
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Ziņa nav atrasta."
+                    });
 
-        }
-
-
-        const courseNumber =
-            message.course.number;
+            }
 
 
-        await Message.findByIdAndDelete(
-            req.params.id
-        );
+            if (
+                message.user.toString() !==
+                userId
+            ) {
+
+                return res
+                    .status(403)
+                    .json({
+                        message:
+                            "Tu nevari dzēst cita lietotāja ziņu."
+                    });
+
+            }
 
 
-        req.io
-            .to(
-                `course-${courseNumber}`
-            )
-            .emit(
-                "messageDeleted",
-                message._id.toString()
+            const course =
+                await getSessionCourse(
+                    req
+                );
+
+
+            if (
+                !course ||
+                message.course.toString() !==
+                course._id.toString()
+            ) {
+
+                return res
+                    .status(403)
+                    .json({
+                        message:
+                            "Ziņa nepieder tavam kursam."
+                    });
+
+            }
+
+
+            await Message.findByIdAndDelete(
+                message._id
             );
 
 
-        res.json({
-            message:
-                "Ziņa izdzēsta."
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Ziņas dzēšanas kļūda:",
-            error
-        );
+            req.io
+                .to(
+                    `course-${courseNumber}`
+                )
+                .emit(
+                    "messageDeleted",
+                    message._id.toString()
+                );
 
 
-        res.status(500).json({
-            message:
-                "Neizdevās izdzēst ziņu."
-        });
+            res.json({
+                message:
+                    "Ziņa izdzēsta."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Ziņas dzēšanas kļūda:",
+                error
+            );
+
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās izdzēst ziņu."
+                });
+
+        }
 
     }
-
-});
+);
 
 
 module.exports = router;
