@@ -3,114 +3,118 @@ const socket = io({
 });
 
 
+// ==========================================
+// ELEMENTS
+// ==========================================
+
 const loadingMessage =
-    document.getElementById(
-        "loadingMessage"
-    );
+    document.getElementById("loadingMessage");
 
 const chatSection =
-    document.getElementById(
-        "chatSection"
-    );
+    document.getElementById("chatSection");
 
 const chatTitle =
-    document.getElementById(
-        "chatTitle"
-    );
+    document.getElementById("chatTitle");
 
 const courseName =
-    document.getElementById(
-        "courseName"
-    );
+    document.getElementById("courseName");
 
 const usernameDisplay =
-    document.getElementById(
-        "usernameDisplay"
-    );
+    document.getElementById("usernameDisplay");
 
 const logoutButton =
-    document.getElementById(
-        "logoutButton"
-    );
+    document.getElementById("logoutButton");
 
 const messages =
-    document.getElementById(
-        "messages"
-    );
+    document.getElementById("messages");
 
 const messageInput =
-    document.getElementById(
-        "messageInput"
-    );
+    document.getElementById("messageInput");
 
 const sendButton =
-    document.getElementById(
-        "sendButton"
-    );
+    document.getElementById("sendButton");
 
 const messageError =
-    document.getElementById(
-        "messageError"
-    );
+    document.getElementById("messageError");
 
-const onlineUsers =
-    document.getElementById(
-        "onlineUsers"
-    );
+const courseUsers =
+    document.getElementById("courseUsers");
 
 const onlineUsersCount =
-    document.getElementById(
-        "onlineUsersCount"
-    );
+    document.getElementById("onlineUsersCount");
 
 const typingIndicator =
-    document.getElementById(
-        "typingIndicator"
-    );
+    document.getElementById("typingIndicator");
 
 const unreadIndicator =
-    document.getElementById(
-        "unreadIndicator"
-    );
+    document.getElementById("unreadIndicator");
 
 const unreadCount =
-    document.getElementById(
-        "unreadCount"
-    );
+    document.getElementById("unreadCount");
 
 const replyPreview =
-    document.getElementById(
-        "replyPreview"
-    );
+    document.getElementById("replyPreview");
 
 const replyUsername =
-    document.getElementById(
-        "replyUsername"
-    );
+    document.getElementById("replyUsername");
 
 const replyText =
-    document.getElementById(
-        "replyText"
-    );
+    document.getElementById("replyText");
 
 const cancelReplyButton =
-    document.getElementById(
-        "cancelReplyButton"
-    );
+    document.getElementById("cancelReplyButton");
 
 const searchInput =
-    document.getElementById(
-        "searchInput"
-    );
+    document.getElementById("searchInput");
 
 const clearSearchButton =
-    document.getElementById(
-        "clearSearchButton"
-    );
+    document.getElementById("clearSearchButton");
 
 const searchEmpty =
+    document.getElementById("searchEmpty");
+
+
+// PRIVATE CHAT
+
+const privateMessageModalElement =
     document.getElementById(
-        "searchEmpty"
+        "privateMessageModal"
+    );
+
+const privateChatUsername =
+    document.getElementById(
+        "privateChatUsername"
+    );
+
+const privateChatStatus =
+    document.getElementById(
+        "privateChatStatus"
+    );
+
+const privateMessages =
+    document.getElementById(
+        "privateMessages"
+    );
+
+const privateMessageInput =
+    document.getElementById(
+        "privateMessageInput"
+    );
+
+const privateSendButton =
+    document.getElementById(
+        "privateSendButton"
+    );
+
+const privateMessageError =
+    document.getElementById(
+        "privateMessageError"
+    );
+
+
+const privateMessageModal =
+    new bootstrap.Modal(
+        privateMessageModalElement
     );
 
 
@@ -118,15 +122,31 @@ const basePageTitle =
     "Čats | Student Chat";
 
 
+// ==========================================
+// STATE
+// ==========================================
+
 let currentUserId = null;
+
 let currentUsername = null;
+
 let currentCourseNumber = null;
+
 let currentReplyTo = null;
 
 let typingTimer = null;
+
 let isTyping = false;
 
 let unreadMessageCount = 0;
+
+let courseParticipants = [];
+
+let onlineUserIds =
+    new Set();
+
+let currentPrivateUser =
+    null;
 
 
 const reactionTypes = [
@@ -146,18 +166,36 @@ const reactionTypes = [
 
 
 // ==========================================
+// HELPERS
+// ==========================================
+
+function getEntityId(value) {
+    if (!value) {
+        return "";
+    }
+
+    if (
+        typeof value === "object"
+    ) {
+        return String(
+            value._id || ""
+        );
+    }
+
+    return String(value);
+}
+
+
+// ==========================================
 // INITIALIZE
 // ==========================================
 
 async function initializeChat() {
-
     try {
-
         const response =
             await fetch(
                 "/api/auth/me"
             );
-
 
         const data =
             await response.json();
@@ -167,24 +205,18 @@ async function initializeChat() {
             !response.ok ||
             !data.authenticated
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         currentUserId =
-            String(
-                data.user._id
-            );
-
+            String(data.user._id);
 
         currentUsername =
             data.user.username;
-
 
         currentCourseNumber =
             Number(
@@ -218,64 +250,52 @@ async function initializeChat() {
         socket.connect();
 
 
-        await loadMessages();
+        await Promise.all([
+            loadMessages(),
+            loadCourseUsers()
+        ]);
 
 
         messageInput.focus();
 
     } catch (error) {
-
         loadingMessage.classList.remove(
             "alert-light"
         );
-
 
         loadingMessage.classList.add(
             "alert-danger"
         );
 
-
         loadingMessage.textContent =
             "Neizdevās ielādēt čatu.";
 
-
-        console.error(
-            error
-        );
-
+        console.error(error);
     }
-
 }
 
 
 // ==========================================
-// SOCKET ROOM
+// SOCKET
 // ==========================================
 
 function joinSocketCourse() {
-
     if (!currentUserId) {
         return;
     }
 
-
     socket.emit(
         "joinCourse"
     );
-
 }
 
 
 socket.on(
     "connect",
     () => {
-
-        isTyping =
-            false;
-
+        isTyping = false;
 
         joinSocketCourse();
-
     }
 );
 
@@ -283,15 +303,11 @@ socket.on(
 socket.on(
     "disconnect",
     () => {
-
-        isTyping =
-            false;
-
+        isTyping = false;
 
         clearTimeout(
             typingTimer
         );
-
     }
 );
 
@@ -299,32 +315,849 @@ socket.on(
 socket.on(
     "connect_error",
     () => {
-
         showMessageError(
             "Neizdevās izveidot reāllaika savienojumu."
         );
-
     }
 );
 
 
 // ==========================================
-// UNREAD
+// COURSE PARTICIPANTS
+// ==========================================
+
+async function loadCourseUsers() {
+    try {
+        const response =
+            await fetch(
+                "/api/private-messages/users"
+            );
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+            window.location.href =
+                "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Neizdevās ielādēt dalībniekus."
+            );
+        }
+
+
+        courseParticipants =
+            data.map(
+                (user) => ({
+                    _id:
+                        String(user._id),
+
+                    username:
+                        user.username
+                })
+            );
+
+
+        renderCourseUsers();
+
+    } catch (error) {
+        courseUsers.innerHTML = `
+            <div class="list-group-item text-danger">
+                ${escapeText(error.message)}
+            </div>
+        `;
+    }
+}
+
+
+function renderCourseUsers() {
+    courseUsers.innerHTML =
+        "";
+
+
+    const users =
+        [...courseParticipants];
+
+
+    users.sort(
+        (a, b) => {
+            const aIsCurrent =
+                a._id ===
+                currentUserId;
+
+            const bIsCurrent =
+                b._id ===
+                currentUserId;
+
+
+            if (
+                aIsCurrent &&
+                !bIsCurrent
+            ) {
+                return -1;
+            }
+
+
+            if (
+                bIsCurrent &&
+                !aIsCurrent
+            ) {
+                return 1;
+            }
+
+
+            const aOnline =
+                onlineUserIds.has(
+                    a._id
+                );
+
+            const bOnline =
+                onlineUserIds.has(
+                    b._id
+                );
+
+
+            if (
+                aOnline !==
+                bOnline
+            ) {
+                return aOnline
+                    ? -1
+                    : 1;
+            }
+
+
+            return a.username.localeCompare(
+                b.username,
+                "lv"
+            );
+        }
+    );
+
+
+    if (
+        users.length === 0
+    ) {
+        courseUsers.innerHTML = `
+            <div class="list-group-item text-secondary">
+                Dalībnieku nav.
+            </div>
+        `;
+
+        return;
+    }
+
+
+    users.forEach(
+        (user) => {
+            const isCurrent =
+                user._id ===
+                currentUserId;
+
+            const isOnline =
+                onlineUserIds.has(
+                    user._id
+                );
+
+
+            const item =
+                document.createElement(
+                    "div"
+                );
+
+
+            item.classList.add(
+                "list-group-item",
+                "d-flex",
+                "align-items-center",
+                "gap-2"
+            );
+
+
+            const dot =
+                document.createElement(
+                    "span"
+                );
+
+
+            dot.classList.add(
+                "participant-status-dot"
+            );
+
+
+            dot.classList.add(
+                isOnline
+                    ? "text-success"
+                    : "text-secondary"
+            );
+
+
+            dot.textContent =
+                "●";
+
+
+            const info =
+                document.createElement(
+                    "div"
+                );
+
+
+            info.classList.add(
+                "participant-info",
+                "flex-grow-1"
+            );
+
+
+            const name =
+                document.createElement(
+                    "div"
+                );
+
+
+            name.classList.add(
+                "participant-name",
+                "fw-semibold"
+            );
+
+
+            name.textContent =
+                user.username;
+
+
+            const state =
+                document.createElement(
+                    "div"
+                );
+
+
+            state.classList.add(
+                "participant-state",
+                "text-secondary"
+            );
+
+
+            state.textContent =
+                isOnline
+                    ? "Tiešsaistē"
+                    : "Bezsaistē";
+
+
+            info.appendChild(
+                name
+            );
+
+
+            info.appendChild(
+                state
+            );
+
+
+            item.appendChild(
+                dot
+            );
+
+
+            item.appendChild(
+                info
+            );
+
+
+            if (isCurrent) {
+                const badge =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                badge.classList.add(
+                    "badge",
+                    "text-bg-primary"
+                );
+
+
+                badge.textContent =
+                    "Tu";
+
+
+                item.appendChild(
+                    badge
+                );
+
+            } else {
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.type =
+                    "button";
+
+
+                button.classList.add(
+                    "btn",
+                    "btn-sm",
+                    "btn-outline-primary"
+                );
+
+
+                button.textContent =
+                    "Ziņa";
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+                        openPrivateChat(
+                            user
+                        );
+                    }
+                );
+
+
+                item.appendChild(
+                    button
+                );
+            }
+
+
+            courseUsers.appendChild(
+                item
+            );
+        }
+    );
+
+
+    onlineUsersCount.textContent =
+        `${onlineUserIds.size} online`;
+}
+
+
+// ==========================================
+// ONLINE USERS
+// ==========================================
+
+socket.on(
+    "onlineUsers",
+    (users) => {
+        onlineUserIds =
+            new Set(
+                users.map(
+                    (user) =>
+                        String(
+                            user.userId
+                        )
+                )
+            );
+
+
+        renderCourseUsers();
+
+
+        updatePrivateChatStatus();
+    }
+);
+
+
+// ==========================================
+// PRIVATE CHAT
+// ==========================================
+
+async function openPrivateChat(user) {
+    currentPrivateUser =
+        user;
+
+
+    privateChatUsername.textContent =
+        `Privāta sarakste ar ${user.username}`;
+
+
+    updatePrivateChatStatus();
+
+
+    privateMessages.innerHTML = `
+        <div class="text-secondary text-center my-4">
+            Ielādē saraksti...
+        </div>
+    `;
+
+
+    hidePrivateMessageError();
+
+
+    privateMessageModal.show();
+
+
+    await loadPrivateMessages(
+        user._id
+    );
+}
+
+
+function updatePrivateChatStatus() {
+    if (!currentPrivateUser) {
+        return;
+    }
+
+
+    const isOnline =
+        onlineUserIds.has(
+            currentPrivateUser._id
+        );
+
+
+    privateChatStatus.textContent =
+        isOnline
+            ? "Tiešsaistē"
+            : "Bezsaistē";
+
+
+    privateChatStatus.classList.toggle(
+        "text-success",
+        isOnline
+    );
+
+
+    privateChatStatus.classList.toggle(
+        "text-secondary",
+        !isOnline
+    );
+}
+
+
+async function loadPrivateMessages(
+    userId
+) {
+    try {
+        const response =
+            await fetch(
+                `/api/private-messages/${userId}`
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+            window.location.href =
+                "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Neizdevās ielādēt privātās ziņas."
+            );
+        }
+
+
+        if (
+            !currentPrivateUser ||
+            currentPrivateUser._id !==
+                userId
+        ) {
+            return;
+        }
+
+
+        privateMessages.innerHTML =
+            "";
+
+
+        if (
+            data.length === 0
+        ) {
+            showEmptyPrivateMessages();
+
+            return;
+        }
+
+
+        data.forEach(
+            addPrivateMessageToChat
+        );
+
+
+        scrollPrivateMessagesToBottom();
+
+    } catch (error) {
+        privateMessages.innerHTML =
+            "";
+
+        showPrivateMessageError(
+            error.message
+        );
+    }
+}
+
+
+function addPrivateMessageToChat(
+    message
+) {
+    if (
+        privateMessages.querySelector(
+            `[data-private-message-id="${message._id}"]`
+        )
+    ) {
+        return;
+    }
+
+
+    privateMessages
+        .querySelector(
+            ".private-empty-message"
+        )
+        ?.remove();
+
+
+    const senderId =
+        getEntityId(
+            message.sender
+        );
+
+
+    const isOwn =
+        senderId ===
+        currentUserId;
+
+
+    const row =
+        document.createElement(
+            "div"
+        );
+
+
+    row.classList.add(
+        "private-message-row"
+    );
+
+
+    row.classList.add(
+        isOwn
+            ? "private-message-own"
+            : "private-message-other"
+    );
+
+
+    row.dataset.privateMessageId =
+        message._id;
+
+
+    const wrapper =
+        document.createElement(
+            "div"
+        );
+
+
+    wrapper.classList.add(
+        "private-message-wrapper"
+    );
+
+
+    const bubble =
+        document.createElement(
+            "div"
+        );
+
+
+    bubble.classList.add(
+        "private-message-bubble"
+    );
+
+
+    const text =
+        document.createElement(
+            "p"
+        );
+
+
+    text.classList.add(
+        "private-message-text"
+    );
+
+
+    text.textContent =
+        message.text;
+
+
+    bubble.appendChild(
+        text
+    );
+
+
+    const time =
+        document.createElement(
+            "div"
+        );
+
+
+    time.classList.add(
+        "private-message-time"
+    );
+
+
+    if (message.createdAt) {
+        time.textContent =
+            new Date(
+                message.createdAt
+            ).toLocaleTimeString(
+                "lv-LV",
+                {
+                    hour:
+                        "2-digit",
+
+                    minute:
+                        "2-digit"
+                }
+            );
+    }
+
+
+    wrapper.appendChild(
+        bubble
+    );
+
+
+    wrapper.appendChild(
+        time
+    );
+
+
+    row.appendChild(
+        wrapper
+    );
+
+
+    privateMessages.appendChild(
+        row
+    );
+}
+
+
+async function sendPrivateMessage() {
+    if (!currentPrivateUser) {
+        return;
+    }
+
+
+    const text =
+        privateMessageInput.value
+            .trim();
+
+
+    if (!text) {
+        showPrivateMessageError(
+            "Lūdzu, ievadi ziņu!"
+        );
+
+        return;
+    }
+
+
+    try {
+        privateSendButton.disabled =
+            true;
+
+
+        const response =
+            await fetch(
+                `/api/private-messages/${currentPrivateUser._id}`,
+                {
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            text:
+                                text
+                        })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status === 401
+        ) {
+            window.location.href =
+                "/";
+
+            return;
+        }
+
+
+        if (!response.ok) {
+            throw new Error(
+                data.message ||
+                "Neizdevās nosūtīt privāto ziņu."
+            );
+        }
+
+
+        // Socket event arī atnāks.
+        // Duplicate check neļaus ziņu
+        // parādīt divreiz.
+        addPrivateMessageToChat(
+            data
+        );
+
+
+        privateMessageInput.value =
+            "";
+
+
+        hidePrivateMessageError();
+
+
+        scrollPrivateMessagesToBottom();
+
+
+        privateMessageInput.focus();
+
+    } catch (error) {
+        showPrivateMessageError(
+            error.message
+        );
+
+    } finally {
+        privateSendButton.disabled =
+            false;
+    }
+}
+
+
+privateSendButton.addEventListener(
+    "click",
+    sendPrivateMessage
+);
+
+
+privateMessageInput.addEventListener(
+    "keydown",
+    (event) => {
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+            event.preventDefault();
+
+            sendPrivateMessage();
+        }
+    }
+);
+
+
+privateMessageModalElement.addEventListener(
+    "shown.bs.modal",
+    () => {
+        privateMessageInput.focus();
+    }
+);
+
+
+privateMessageModalElement.addEventListener(
+    "hidden.bs.modal",
+    () => {
+        currentPrivateUser =
+            null;
+
+        privateMessageInput.value =
+            "";
+
+        hidePrivateMessageError();
+    }
+);
+
+
+// ==========================================
+// PRIVATE MESSAGE REAL-TIME
+// ==========================================
+
+socket.on(
+    "privateMessage",
+    (message) => {
+        const senderId =
+            getEntityId(
+                message.sender
+            );
+
+        const recipientId =
+            getEntityId(
+                message.recipient
+            );
+
+
+        const belongsToCurrentUser =
+            senderId === currentUserId ||
+            recipientId === currentUserId;
+
+
+        if (
+            !belongsToCurrentUser
+        ) {
+            return;
+        }
+
+
+        const partnerId =
+            senderId === currentUserId
+                ? recipientId
+                : senderId;
+
+
+        if (
+            currentPrivateUser &&
+            currentPrivateUser._id ===
+                partnerId
+        ) {
+            addPrivateMessageToChat(
+                message
+            );
+
+
+            scrollPrivateMessagesToBottom();
+        }
+    }
+);
+
+
+// ==========================================
+// UNREAD GENERAL CHAT
 // ==========================================
 
 function isChatActive() {
-
     return (
         document.visibilityState ===
             "visible" &&
         document.hasFocus()
     );
-
 }
 
 
 function isMessagesNearBottom() {
-
     const distanceFromBottom =
         messages.scrollHeight -
         messages.scrollTop -
@@ -335,12 +1168,10 @@ function isMessagesNearBottom() {
         distanceFromBottom <=
         80
     );
-
 }
 
 
 function updateUnreadIndicator() {
-
     unreadCount.textContent =
         unreadMessageCount;
 
@@ -348,7 +1179,6 @@ function updateUnreadIndicator() {
     if (
         unreadMessageCount > 0
     ) {
-
         unreadIndicator.classList.remove(
             "d-none"
         );
@@ -358,7 +1188,6 @@ function updateUnreadIndicator() {
             `${basePageTitle} (${unreadMessageCount})`;
 
     } else {
-
         unreadIndicator.classList.add(
             "d-none"
         );
@@ -366,40 +1195,28 @@ function updateUnreadIndicator() {
 
         document.title =
             basePageTitle;
-
     }
-
 }
 
 
 function addUnreadMessage() {
-
     unreadMessageCount++;
 
-
     updateUnreadIndicator();
-
 }
 
 
 function clearUnreadMessages() {
-
-    unreadMessageCount =
-        0;
-
+    unreadMessageCount = 0;
 
     updateUnreadIndicator();
-
 }
 
 
 function goToLatestMessages() {
-
     scrollMessagesToBottom();
 
-
     clearUnreadMessages();
-
 }
 
 
@@ -412,21 +1229,14 @@ unreadIndicator.addEventListener(
 unreadIndicator.addEventListener(
     "keydown",
     (event) => {
-
         if (
-            event.key ===
-                "Enter" ||
-            event.key ===
-                " "
+            event.key === "Enter" ||
+            event.key === " "
         ) {
-
             event.preventDefault();
 
-
             goToLatestMessages();
-
         }
-
     }
 );
 
@@ -434,16 +1244,12 @@ unreadIndicator.addEventListener(
 messages.addEventListener(
     "scroll",
     () => {
-
         if (
             isChatActive() &&
             isMessagesNearBottom()
         ) {
-
             clearUnreadMessages();
-
         }
-
     }
 );
 
@@ -451,18 +1257,14 @@ messages.addEventListener(
 document.addEventListener(
     "visibilitychange",
     () => {
-
         if (
             document.visibilityState ===
                 "visible" &&
             document.hasFocus() &&
             isMessagesNearBottom()
         ) {
-
             clearUnreadMessages();
-
         }
-
     }
 );
 
@@ -470,15 +1272,11 @@ document.addEventListener(
 window.addEventListener(
     "focus",
     () => {
-
         if (
             isMessagesNearBottom()
         ) {
-
             clearUnreadMessages();
-
         }
-
     }
 );
 
@@ -488,27 +1286,20 @@ window.addEventListener(
 // ==========================================
 
 function startTyping() {
-
     if (
         !currentUserId ||
         !socket.connected
     ) {
-
         return;
-
     }
 
 
     if (!isTyping) {
-
         socket.emit(
             "typingStart"
         );
 
-
-        isTyping =
-            true;
-
+        isTyping = true;
     }
 
 
@@ -522,12 +1313,10 @@ function startTyping() {
             stopTyping,
             1200
         );
-
 }
 
 
 function stopTyping() {
-
     clearTimeout(
         typingTimer
     );
@@ -537,39 +1326,30 @@ function stopTyping() {
         isTyping &&
         socket.connected
     ) {
-
         socket.emit(
             "typingStop"
         );
-
     }
 
 
-    isTyping =
-        false;
-
+    isTyping = false;
 }
 
 
 messageInput.addEventListener(
     "input",
     () => {
-
         if (
             messageInput.value
-                .trim() ===
-            ""
+                .trim() === ""
         ) {
-
             stopTyping();
 
             return;
-
         }
 
 
         startTyping();
-
     }
 );
 
@@ -580,115 +1360,88 @@ messageInput.addEventListener(
 );
 
 
-// ==========================================
-// TYPING USERS
-// ==========================================
-
 socket.on(
     "typingUsers",
     (users) => {
-
         const otherUsers =
             users.filter(
                 (user) =>
                     String(
                         user.userId
                     ) !==
-                    String(
-                        currentUserId
-                    )
+                    currentUserId
             );
 
 
         if (
-            otherUsers.length ===
-            0
+            otherUsers.length === 0
         ) {
-
             typingIndicator.textContent =
                 "";
-
 
             typingIndicator.classList.add(
                 "d-none"
             );
 
-
             return;
-
         }
 
 
         if (
-            otherUsers.length ===
-            1
+            otherUsers.length === 1
         ) {
-
             typingIndicator.textContent =
                 `${otherUsers[0].username} raksta...`;
 
         } else if (
-            otherUsers.length ===
-            2
+            otherUsers.length === 2
         ) {
-
             typingIndicator.textContent =
                 `${otherUsers[0].username} un ${otherUsers[1].username} raksta...`;
 
         } else {
-
             typingIndicator.textContent =
                 `${otherUsers[0].username}, ${otherUsers[1].username} un vēl ${otherUsers.length - 2} raksta...`;
-
         }
 
 
         typingIndicator.classList.remove(
             "d-none"
         );
-
     }
 );
 
 
 // ==========================================
-// LOAD MESSAGES
+// LOAD GENERAL MESSAGES
 // ==========================================
 
 async function loadMessages() {
-
     try {
-
         const response =
             await fetch(
                 "/api/messages"
             );
-
 
         const data =
             await response.json();
 
 
         if (
-            response.status ===
-            401
+            response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās ielādēt ziņas."
             );
-
         }
 
 
@@ -697,14 +1450,11 @@ async function loadMessages() {
 
 
         if (
-            data.length ===
-            0
+            data.length === 0
         ) {
-
             showEmptyMessages();
 
             return;
-
         }
 
 
@@ -715,39 +1465,31 @@ async function loadMessages() {
 
         applyMessageSearch();
 
-
         scrollMessagesToBottom();
-
 
         clearUnreadMessages();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
 // ==========================================
-// ADD MESSAGE
+// GENERAL MESSAGE UI
 // ==========================================
 
 function addMessageToChat(
     message
 ) {
-
     if (
         messages.querySelector(
             `[data-message-id="${message._id}"]`
         )
     ) {
-
         return;
-
     }
 
 
@@ -759,17 +1501,11 @@ function addMessageToChat(
 
 
     const isOwn =
-        String(
-            message.user?._id
+        getEntityId(
+            message.user
         ) ===
-        String(
-            currentUserId
-        );
+        currentUserId;
 
-
-    // ======================================
-    // MESSAGE ROW
-    // ======================================
 
     const messageElement =
         document.createElement(
@@ -778,11 +1514,7 @@ function addMessageToChat(
 
 
     messageElement.classList.add(
-        "chat-message"
-    );
-
-
-    messageElement.classList.add(
+        "chat-message",
         isOwn
             ? "chat-message-own"
             : "chat-message-other"
@@ -792,30 +1524,22 @@ function addMessageToChat(
     messageElement.dataset.messageId =
         message._id;
 
-
     messageElement.dataset.messageText =
         message.text;
 
-
     messageElement.dataset.username =
-        message.user?.username ||
-        "";
+        message.user?.username || "";
 
-
-    // DOUBLE CLICK = LIKE
 
     messageElement.addEventListener(
         "dblclick",
         (event) => {
-
             if (
                 event.target.closest(
                     "button, a, input, .dropdown-menu"
                 )
             ) {
-
                 return;
-
             }
 
 
@@ -823,14 +1547,9 @@ function addMessageToChat(
                 message._id,
                 "👍"
             );
-
         }
     );
 
-
-    // ======================================
-    // WRAPPER
-    // ======================================
 
     const wrapper =
         document.createElement(
@@ -842,10 +1561,6 @@ function addMessageToChat(
         "message-wrapper"
     );
 
-
-    // ======================================
-    // INFO
-    // ======================================
 
     const info =
         document.createElement(
@@ -890,22 +1605,19 @@ function addMessageToChat(
 
 
     if (message.createdAt) {
-
         time.textContent =
             new Date(
                 message.createdAt
-            )
-                .toLocaleTimeString(
-                    "lv-LV",
-                    {
-                        hour:
-                            "2-digit",
+            ).toLocaleTimeString(
+                "lv-LV",
+                {
+                    hour:
+                        "2-digit",
 
-                        minute:
-                            "2-digit"
-                    }
-                );
-
+                    minute:
+                        "2-digit"
+                }
+            );
     }
 
 
@@ -913,20 +1625,14 @@ function addMessageToChat(
         username
     );
 
-
     info.appendChild(
         time
     );
-
 
     wrapper.appendChild(
         info
     );
 
-
-    // ======================================
-    // BUBBLE
-    // ======================================
 
     const bubble =
         document.createElement(
@@ -939,12 +1645,7 @@ function addMessageToChat(
     );
 
 
-    // ======================================
-    // REPLY INSIDE BUBBLE
-    // ======================================
-
     if (message.replyTo) {
-
         const replyElement =
             document.createElement(
                 "div"
@@ -1006,13 +1707,8 @@ function addMessageToChat(
         bubble.appendChild(
             replyElement
         );
-
     }
 
-
-    // ======================================
-    // TEXT
-    // ======================================
 
     const textElement =
         document.createElement(
@@ -1029,21 +1725,10 @@ function addMessageToChat(
         message.text;
 
 
-    if (
-        message.createdAt &&
-        message.updatedAt &&
-        new Date(
-            message.updatedAt
-        ).getTime() >
-        new Date(
-            message.createdAt
-        ).getTime()
-    ) {
-
+    if (message.editedAt) {
         addEditedLabel(
             textElement
         );
-
     }
 
 
@@ -1056,10 +1741,6 @@ function addMessageToChat(
         bubble
     );
 
-
-    // ======================================
-    // REACTIONS
-    // ======================================
 
     const reactionsContainer =
         document.createElement(
@@ -1076,10 +1757,6 @@ function addMessageToChat(
         reactionsContainer
     );
 
-
-    // ======================================
-    // ACTIONS
-    // ======================================
 
     const actions =
         document.createElement(
@@ -1125,10 +1802,8 @@ function addMessageToChat(
 
     renderReactions(
         messageElement,
-        message.reactions ||
-        []
+        message.reactions || []
     );
-
 }
 
 
@@ -1141,7 +1816,6 @@ function createActionMenu(
     messageElement,
     isOwn
 ) {
-
     const dropdown =
         document.createElement(
             "div"
@@ -1177,12 +1851,6 @@ function createActionMenu(
     );
 
 
-    button.setAttribute(
-        "aria-expanded",
-        "false"
-    );
-
-
     button.textContent =
         "⋯";
 
@@ -1198,10 +1866,6 @@ function createActionMenu(
         "message-menu"
     );
 
-
-    // ======================================
-    // REPLY
-    // ======================================
 
     const replyItem =
         document.createElement(
@@ -1231,7 +1895,6 @@ function createActionMenu(
     replyButton.addEventListener(
         "click",
         () => {
-
             startReply(
                 message._id,
                 messageElement
@@ -1241,7 +1904,6 @@ function createActionMenu(
                     .dataset
                     .messageText
             );
-
         }
     );
 
@@ -1256,12 +1918,7 @@ function createActionMenu(
     );
 
 
-    // ======================================
-    // OWN MESSAGE
-    // ======================================
-
     if (isOwn) {
-
         const editItem =
             document.createElement(
                 "li"
@@ -1290,14 +1947,12 @@ function createActionMenu(
         editButton.addEventListener(
             "click",
             () => {
-
                 editMessage(
                     message._id,
                     messageElement
                         .dataset
                         .messageText
                 );
-
             }
         );
 
@@ -1356,11 +2011,9 @@ function createActionMenu(
         deleteButton.addEventListener(
             "click",
             () => {
-
                 deleteMessage(
                     message._id
                 );
-
             }
         );
 
@@ -1373,7 +2026,6 @@ function createActionMenu(
         menu.appendChild(
             deleteItem
         );
-
     }
 
 
@@ -1388,7 +2040,6 @@ function createActionMenu(
 
 
     return dropdown;
-
 }
 
 
@@ -1399,7 +2050,6 @@ function createActionMenu(
 function createReactionMenu(
     messageId
 ) {
-
     const dropdown =
         document.createElement(
             "div"
@@ -1436,12 +2086,6 @@ function createReactionMenu(
     );
 
 
-    menuButton.setAttribute(
-        "aria-expanded",
-        "false"
-    );
-
-
     menuButton.textContent =
         "😊";
 
@@ -1474,7 +2118,6 @@ function createReactionMenu(
 
     reactionTypes.forEach(
         (reaction) => {
-
             const column =
                 document.createElement(
                     "div"
@@ -1486,49 +2129,46 @@ function createReactionMenu(
             );
 
 
-            const reactionButton =
+            const button =
                 document.createElement(
                     "button"
                 );
 
 
-            reactionButton.type =
+            button.type =
                 "button";
 
 
-            reactionButton.classList.add(
+            button.classList.add(
                 "btn",
                 "btn-light",
                 "w-100"
             );
 
 
-            reactionButton.textContent =
+            button.textContent =
                 reaction;
 
 
-            reactionButton.addEventListener(
+            button.addEventListener(
                 "click",
                 () => {
-
                     toggleReaction(
                         messageId,
                         reaction
                     );
-
                 }
             );
 
 
             column.appendChild(
-                reactionButton
+                button
             );
 
 
             row.appendChild(
                 column
             );
-
         }
     );
 
@@ -1549,7 +2189,6 @@ function createReactionMenu(
 
 
     return dropdown;
-
 }
 
 
@@ -1561,7 +2200,6 @@ function renderReactions(
     messageElement,
     reactions
 ) {
-
     const container =
         messageElement.querySelector(
             ".reactions-container"
@@ -1569,9 +2207,7 @@ function renderReactions(
 
 
     if (!container) {
-
         return;
-
     }
 
 
@@ -1581,7 +2217,6 @@ function renderReactions(
 
     reactionTypes.forEach(
         (reactionType) => {
-
             const reactionUsers =
                 reactions
                     .filter(
@@ -1590,27 +2225,10 @@ function renderReactions(
                             reactionType
                     )
                     .map(
-                        (reaction) => {
-
-                            if (
-                                typeof reaction.user ===
-                                    "object" &&
-                                reaction.user !==
-                                    null
-                            ) {
-
-                                return String(
-                                    reaction.user._id
-                                );
-
-                            }
-
-
-                            return String(
+                        (reaction) =>
+                            getEntityId(
                                 reaction.user
-                            );
-
-                        }
+                            )
                     );
 
 
@@ -1618,17 +2236,13 @@ function renderReactions(
                 reactionUsers.length ===
                 0
             ) {
-
                 return;
-
             }
 
 
             const currentUserReacted =
                 reactionUsers.includes(
-                    String(
-                        currentUserId
-                    )
+                    currentUserId
                 );
 
 
@@ -1645,11 +2259,7 @@ function renderReactions(
             button.classList.add(
                 "btn",
                 "btn-sm",
-                "reaction-badge"
-            );
-
-
-            button.classList.add(
+                "reaction-badge",
                 currentUserReacted
                     ? "btn-primary"
                     : "btn-light"
@@ -1663,7 +2273,6 @@ function renderReactions(
             button.addEventListener(
                 "click",
                 () => {
-
                     toggleReaction(
                         messageElement
                             .dataset
@@ -1671,7 +2280,6 @@ function renderReactions(
 
                         reactionType
                     );
-
                 }
             );
 
@@ -1679,10 +2287,8 @@ function renderReactions(
             container.appendChild(
                 button
             );
-
         }
     );
-
 }
 
 
@@ -1694,9 +2300,7 @@ async function toggleReaction(
     messageId,
     reaction
 ) {
-
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}/reaction`,
@@ -1722,38 +2326,30 @@ async function toggleReaction(
 
 
         if (
-            response.status ===
-            401
+            response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās saglabāt reakciju."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
@@ -1762,7 +2358,6 @@ async function toggleReaction(
 // ==========================================
 
 function applyMessageSearch() {
-
     const searchValue =
         searchInput.value
             .trim()
@@ -1781,7 +2376,6 @@ function applyMessageSearch() {
 
     messageElements.forEach(
         (messageElement) => {
-
             const messageText =
                 messageElement
                     .dataset
@@ -1812,11 +2406,8 @@ function applyMessageSearch() {
 
 
             if (matches) {
-
                 visibleMessages++;
-
             }
-
         }
     );
 
@@ -1828,7 +2419,6 @@ function applyMessageSearch() {
         messageElements.length === 0 ||
         visibleMessages > 0
     );
-
 }
 
 
@@ -1841,16 +2431,12 @@ searchInput.addEventListener(
 clearSearchButton.addEventListener(
     "click",
     () => {
-
         searchInput.value =
             "";
 
-
         applyMessageSearch();
 
-
         searchInput.focus();
-
     }
 );
 
@@ -1864,7 +2450,6 @@ function startReply(
     username,
     text
 ) {
-
     currentReplyTo = {
         id:
             messageId,
@@ -1891,12 +2476,10 @@ function startReply(
 
 
     messageInput.focus();
-
 }
 
 
 function cancelReply() {
-
     currentReplyTo =
         null;
 
@@ -1912,7 +2495,6 @@ function cancelReply() {
     replyPreview.classList.add(
         "d-none"
     );
-
 }
 
 
@@ -1929,7 +2511,6 @@ cancelReplyButton.addEventListener(
 function addEditedLabel(
     textElement
 ) {
-
     textElement
         .querySelector(
             ".edited-label"
@@ -1957,19 +2538,17 @@ function addEditedLabel(
     textElement.appendChild(
         editedElement
     );
-
 }
 
 
 // ==========================================
-// EDIT
+// EDIT MESSAGE
 // ==========================================
 
 async function editMessage(
     messageId,
     oldText
 ) {
-
     const newText =
         prompt(
             "Rediģē ziņu:",
@@ -1978,12 +2557,9 @@ async function editMessage(
 
 
     if (
-        newText ===
-        null
+        newText === null
     ) {
-
         return;
-
     }
 
 
@@ -1992,19 +2568,15 @@ async function editMessage(
 
 
     if (!trimmedText) {
-
         showMessageError(
             "Ziņa nevar būt tukša."
         );
 
-
         return;
-
     }
 
 
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -2031,51 +2603,41 @@ async function editMessage(
 
 
         if (
-            response.status ===
-            401
+            response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās rediģēt ziņu."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
 // ==========================================
-// DELETE
+// DELETE MESSAGE
 // ==========================================
 
 async function deleteMessage(
     messageId
 ) {
-
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -2091,60 +2653,49 @@ async function deleteMessage(
 
 
         if (
-            response.status ===
-            401
+            response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās izdzēst ziņu."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
 // ==========================================
-// NEW MESSAGE
+// GENERAL MESSAGE SOCKETS
 // ==========================================
 
 socket.on(
     "newMessage",
     (message) => {
-
         const wasNearBottom =
             isMessagesNearBottom();
 
 
         const isOwn =
-            String(
-                message.user?._id
+            getEntityId(
+                message.user
             ) ===
-            String(
-                currentUserId
-            );
+            currentUserId;
 
 
         addMessageToChat(
@@ -2156,13 +2707,11 @@ socket.on(
 
 
         if (isOwn) {
-
             scrollMessagesToBottom();
 
             clearUnreadMessages();
 
             return;
-
         }
 
 
@@ -2170,28 +2719,20 @@ socket.on(
             !isChatActive() ||
             !wasNearBottom
         ) {
-
             addUnreadMessage();
 
             return;
-
         }
 
 
         scrollMessagesToBottom();
-
     }
 );
 
 
-// ==========================================
-// EDIT REAL-TIME
-// ==========================================
-
 socket.on(
     "messageUpdated",
     (message) => {
-
         const messageElement =
             messages.querySelector(
                 `[data-message-id="${message._id}"]`
@@ -2199,7 +2740,6 @@ socket.on(
 
 
         if (messageElement) {
-
             messageElement
                 .dataset
                 .messageText =
@@ -2213,7 +2753,6 @@ socket.on(
 
 
             if (textElement) {
-
                 textElement.textContent =
                     message.text;
 
@@ -2221,9 +2760,7 @@ socket.on(
                 addEditedLabel(
                     textElement
                 );
-
             }
-
         }
 
 
@@ -2233,45 +2770,32 @@ socket.on(
             )
             .forEach(
                 (element) => {
-
                     element.textContent =
                         message.text;
-
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(
-                message._id
-            )
+            String(message._id)
         ) {
-
             currentReplyTo.text =
                 message.text;
 
-
             replyText.textContent =
                 message.text;
-
         }
 
 
         applyMessageSearch();
-
     }
 );
 
 
-// ==========================================
-// REACTIONS REAL-TIME
-// ==========================================
-
 socket.on(
     "messageReactionUpdated",
     (data) => {
-
         const messageElement =
             messages.querySelector(
                 `[data-message-id="${data.messageId}"]`
@@ -2279,27 +2803,18 @@ socket.on(
 
 
         if (messageElement) {
-
             renderReactions(
                 messageElement,
-                data.reactions ||
-                []
+                data.reactions || []
             );
-
         }
-
     }
 );
 
 
-// ==========================================
-// DELETE REAL-TIME
-// ==========================================
-
 socket.on(
     "messageDeleted",
     (messageId) => {
-
         messages
             .querySelector(
                 `[data-message-id="${messageId}"]`
@@ -2313,23 +2828,17 @@ socket.on(
             )
             .forEach(
                 (element) => {
-
                     element.textContent =
                         "Ziņa izdzēsta";
-
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(
-                messageId
-            )
+            String(messageId)
         ) {
-
             cancelReply();
-
         }
 
 
@@ -2338,155 +2847,19 @@ socket.on(
                 .querySelectorAll(
                     ".chat-message"
                 )
-                .length ===
-            0
+                .length === 0
         ) {
-
             showEmptyMessages();
-
         }
 
 
         applyMessageSearch();
-
     }
 );
 
 
 // ==========================================
-// ONLINE
-// ==========================================
-
-socket.on(
-    "onlineUsers",
-    (users) => {
-
-        onlineUsersCount.textContent =
-            users.length;
-
-
-        onlineUsers.innerHTML =
-            "";
-
-
-        if (
-            users.length ===
-            0
-        ) {
-
-            onlineUsers.innerHTML =
-                `
-                <div
-                    class="list-group-item text-secondary"
-                >
-                    Neviens nav tiešsaistē.
-                </div>
-                `;
-
-
-            return;
-
-        }
-
-
-        users.forEach(
-            (user) => {
-
-                const userElement =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                userElement.classList.add(
-                    "list-group-item",
-                    "d-flex",
-                    "align-items-center",
-                    "gap-2"
-                );
-
-
-                const status =
-                    document.createElement(
-                        "span"
-                    );
-
-
-                status.classList.add(
-                    "text-success"
-                );
-
-
-                status.textContent =
-                    "●";
-
-
-                const name =
-                    document.createElement(
-                        "span"
-                    );
-
-
-                name.textContent =
-                    user.username;
-
-
-                userElement.appendChild(
-                    status
-                );
-
-
-                userElement.appendChild(
-                    name
-                );
-
-
-                if (
-                    String(
-                        user.userId
-                    ) ===
-                    String(
-                        currentUserId
-                    )
-                ) {
-
-                    const youBadge =
-                        document.createElement(
-                            "span"
-                        );
-
-
-                    youBadge.classList.add(
-                        "badge",
-                        "text-bg-primary",
-                        "ms-auto"
-                    );
-
-
-                    youBadge.textContent =
-                        "Tu";
-
-
-                    userElement.appendChild(
-                        youBadge
-                    );
-
-                }
-
-
-                onlineUsers.appendChild(
-                    userElement
-                );
-
-            }
-        );
-
-    }
-);
-
-
-// ==========================================
-// SEND
+// SEND GENERAL MESSAGE
 // ==========================================
 
 sendButton.addEventListener(
@@ -2496,13 +2869,12 @@ sendButton.addEventListener(
 
 
 async function sendMessage() {
-
     const text =
-        messageInput.value.trim();
+        messageInput.value
+            .trim();
 
 
     if (!text) {
-
         stopTyping();
 
 
@@ -2512,7 +2884,6 @@ async function sendMessage() {
 
 
         return;
-
     }
 
 
@@ -2520,7 +2891,6 @@ async function sendMessage() {
 
 
     try {
-
         sendButton.disabled =
             true;
 
@@ -2555,25 +2925,20 @@ async function sendMessage() {
 
 
         if (
-            response.status ===
-            401
+            response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās nosūtīt ziņu."
             );
-
         }
 
 
@@ -2583,49 +2948,33 @@ async function sendMessage() {
 
         cancelReply();
 
-
         hideMessageError();
-
 
         messageInput.focus();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
 
     } finally {
-
         sendButton.disabled =
             false;
-
     }
-
 }
 
-
-// ==========================================
-// ENTER
-// ==========================================
 
 messageInput.addEventListener(
     "keydown",
     (event) => {
-
         if (
-            event.key ===
-                "Enter" &&
+            event.key === "Enter" &&
             !event.shiftKey
         ) {
-
             event.preventDefault();
 
-
             sendMessage();
-
         }
-
     }
 );
 
@@ -2637,9 +2986,7 @@ messageInput.addEventListener(
 logoutButton.addEventListener(
     "click",
     async () => {
-
         try {
-
             stopTyping();
 
 
@@ -2662,12 +3009,10 @@ logoutButton.addEventListener(
 
 
             if (!response.ok) {
-
                 throw new Error(
                     data.message ||
                     "Neizdevās izrakstīties."
                 );
-
             }
 
 
@@ -2678,7 +3023,6 @@ logoutButton.addEventListener(
                 "/";
 
         } catch (error) {
-
             showMessageError(
                 error.message
             );
@@ -2686,44 +3030,53 @@ logoutButton.addEventListener(
 
             logoutButton.disabled =
                 false;
-
         }
-
     }
 );
 
 
 // ==========================================
-// HELPERS
+// UI HELPERS
 // ==========================================
 
 function showEmptyMessages() {
-
-    messages.innerHTML =
-        `
+    messages.innerHTML = `
         <p
             id="emptyMessages"
             class="text-secondary text-center my-4"
         >
             Ziņu vēl nav.
         </p>
-        `;
+    `;
+}
 
+
+function showEmptyPrivateMessages() {
+    privateMessages.innerHTML = `
+        <div
+            class="private-empty-message text-secondary text-center my-4"
+        >
+            Privāto ziņu vēl nav.
+        </div>
+    `;
 }
 
 
 function scrollMessagesToBottom() {
-
     messages.scrollTop =
         messages.scrollHeight;
+}
 
+
+function scrollPrivateMessagesToBottom() {
+    privateMessages.scrollTop =
+        privateMessages.scrollHeight;
 }
 
 
 function showMessageError(
     message
 ) {
-
     messageError.textContent =
         message;
 
@@ -2731,16 +3084,53 @@ function showMessageError(
     messageError.classList.remove(
         "d-none"
     );
-
 }
 
 
 function hideMessageError() {
-
     messageError.classList.add(
         "d-none"
     );
+}
 
+
+function showPrivateMessageError(
+    message
+) {
+    privateMessageError.textContent =
+        message;
+
+
+    privateMessageError.classList.remove(
+        "d-none"
+    );
+}
+
+
+function hidePrivateMessageError() {
+    privateMessageError.classList.add(
+        "d-none"
+    );
+}
+
+
+/*
+ * Šī funkcija tiek izmantota tikai
+ * kļūdas teksta drošai ievietošanai HTML,
+ * kad tas nepieciešams.
+ */
+function escapeText(value) {
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.textContent =
+        value;
+
+
+    return element.innerHTML;
 }
 
 
