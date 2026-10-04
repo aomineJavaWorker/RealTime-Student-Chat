@@ -201,6 +201,38 @@ function addMessageToChat(message) {
         message.user._id === currentUserId
     ) {
 
+        const editButton =
+        document.createElement("button");
+
+    editButton.type = "button";
+
+    editButton.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-outline-primary"
+    );
+
+    editButton.textContent =
+        "Rediģēt";
+
+
+    editButton.addEventListener(
+        "click",
+        () => {
+
+            editMessage(
+                message._id,
+                message.text
+            );
+
+        }
+    );
+
+
+    rightSide.appendChild(
+        editButton
+    );
+
         const deleteButton =
             document.createElement("button");
 
@@ -245,14 +277,39 @@ function addMessageToChat(message) {
 
 
     const textElement =
-        document.createElement("p");
+    document.createElement("p");
 
     textElement.classList.add(
-        "mb-0"
+        "mb-0",
+        "message-text"
     );
 
     textElement.textContent =
         message.text;
+
+    if (
+        message.updatedAt &&
+        message.createdAt &&
+        message.updatedAt !== message.createdAt
+    ) {
+
+        const editedElement =
+            document.createElement("small");
+
+        editedElement.classList.add(
+            "text-secondary",
+            "ms-2",
+            "edited-label"
+        );
+
+        editedElement.textContent =
+            "(rediģēts)";
+
+        textElement.appendChild(
+            editedElement
+        );
+
+    }
 
 
     messageElement.appendChild(
@@ -320,11 +377,146 @@ async function deleteMessage(messageId) {
 
 }
 
+async function editMessage(
+    messageId,
+    oldText
+) {
+
+    const newText = prompt(
+        "Rediģē ziņu:",
+        oldText
+    );
+
+
+    if (newText === null) {
+        return;
+    }
+
+
+    const trimmedText =
+        newText.trim();
+
+
+    if (trimmedText === "") {
+
+        messageError.textContent =
+            "Ziņa nevar būt tukša.";
+
+        messageError.classList.remove(
+            "d-none"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response = await fetch(
+            `/api/messages/${messageId}`,
+            {
+                method: "PUT",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    text: trimmedText,
+                    userId: currentUserId
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās rediģēt ziņu."
+            );
+
+        }
+
+
+        messageError.classList.add(
+            "d-none"
+        );
+
+    } catch (error) {
+
+        messageError.textContent =
+            error.message;
+
+        messageError.classList.remove(
+            "d-none"
+        );
+
+    }
+
+}
+
 socket.on(
     "newMessage",
     (message) => {
 
         addMessageToChat(message);
+
+    }
+);
+
+socket.on(
+    "messageUpdated",
+    (message) => {
+
+        const messageElement =
+            messages.querySelector(
+                `[data-message-id="${message._id}"]`
+            );
+
+
+        if (!messageElement) {
+            return;
+        }
+
+
+        const textElement =
+            messageElement.querySelector(
+                ".message-text"
+            );
+
+
+        if (!textElement) {
+            return;
+        }
+
+
+        textElement.textContent =
+            message.text;
+
+
+        const editedElement =
+            document.createElement("small");
+
+        editedElement.classList.add(
+            "text-secondary",
+            "ms-2",
+            "edited-label"
+        );
+
+        editedElement.textContent =
+            "(rediģēts)";
+
+
+        textElement.appendChild(
+            editedElement
+        );
 
     }
 );

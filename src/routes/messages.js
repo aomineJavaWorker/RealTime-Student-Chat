@@ -122,6 +122,102 @@ router.post("/", async (req, res) => {
 
 });
 
+router.put("/:id", async (req, res) => {
+
+    try {
+
+        const {
+            text,
+            userId
+        } = req.body;
+
+
+        if (!text || !userId) {
+
+            return res.status(400).json({
+                message: "Trūkst nepieciešamo datu."
+            });
+
+        }
+
+
+        const message = await Message.findById(
+            req.params.id
+        )
+            .populate(
+                "user",
+                "username"
+            )
+            .populate(
+                "course",
+                "number"
+            );
+
+
+        if (!message) {
+
+            return res.status(404).json({
+                message: "Ziņa nav atrasta."
+            });
+
+        }
+
+
+        if (
+            message.user._id.toString() !== userId
+        ) {
+
+            return res.status(403).json({
+                message: "Tu nevari rediģēt cita lietotāja ziņu."
+            });
+
+        }
+
+
+        const newText = text.trim();
+
+        if (newText === "") {
+
+            return res.status(400).json({
+                message: "Ziņa nevar būt tukša."
+            });
+
+        }
+
+
+        message.text = newText;
+
+        await message.save();
+
+
+        const messageData =
+            message.toObject();
+
+
+        req.io
+            .to(`course-${message.course.number}`)
+            .emit(
+                "messageUpdated",
+                messageData
+            );
+
+
+        res.json(messageData);
+
+    } catch (error) {
+
+        console.error(
+            "Ziņas rediģēšanas kļūda:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Neizdevās rediģēt ziņu."
+        });
+
+    }
+
+});
 
 router.delete("/:id", async (req, res) => {
 
