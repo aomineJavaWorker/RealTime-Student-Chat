@@ -5,8 +5,7 @@ const messageSchema = new mongoose.Schema(
         text: {
             type: String,
             required: true,
-            trim: true,
-            maxlength: 500
+            trim: true
         },
 
         user: {
@@ -26,4 +25,7 @@ const messageSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Message", messageSchema);
+module.exports = mongoose.model(
+    "Message",
+    messageSchema
+);

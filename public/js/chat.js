@@ -1,6 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const course = params.get("course");
-
+const socket = io();
 const courseTitle = document.getElementById("courseTitle");
 const chatTitle = document.getElementById("chatTitle");
 
@@ -95,7 +95,10 @@ joinButton.addEventListener("click", async () => {
         }
 
         currentUserId = data._id;
-
+                socket.emit(
+            "joinCourse",
+            Number(course)
+        );
         usernameError.classList.add("d-none");
 
         usernameDisplay.textContent = data.username;
@@ -146,6 +149,15 @@ function addMessageToChat(message) {
     messages.appendChild(messageElement);
 }
 
+socket.on(
+    "newMessage",
+    (message) => {
+
+        addMessageToChat(message);
+
+    }
+);
+
 sendButton.addEventListener("click", async () => {
     const messageText = messageInput.value.trim();
 
@@ -185,8 +197,6 @@ sendButton.addEventListener("click", async () => {
         }
 
         messageError.classList.add("d-none");
-
-        addMessageToChat(data);
 
         messageInput.value = "";
 

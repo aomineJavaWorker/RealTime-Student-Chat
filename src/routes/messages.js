@@ -36,6 +36,8 @@ router.get("/", async (req, res) => {
 
     } catch (error) {
 
+        console.error(error);
+
         res.status(500).json({
             message: "Neizdevās iegūt ziņas."
         });
@@ -92,9 +94,25 @@ router.post("/", async (req, res) => {
         );
 
 
-        res.status(201).json(message);
+        const messageData = message.toObject();
+
+
+        req.io
+            .to(`course-${courseNumber}`)
+            .emit(
+                "newMessage",
+                messageData
+            );
+
+
+        res.status(201).json(messageData);
 
     } catch (error) {
+
+        console.error(
+            "Ziņas nosūtīšanas kļūda:",
+            error
+        );
 
         res.status(500).json({
             message: "Neizdevās nosūtīt ziņu."
@@ -109,9 +127,10 @@ router.delete("/:id", async (req, res) => {
 
     try {
 
-        const message = await Message.findByIdAndDelete(
-            req.params.id
-        );
+        const message =
+            await Message.findByIdAndDelete(
+                req.params.id
+            );
 
 
         if (!message) {
