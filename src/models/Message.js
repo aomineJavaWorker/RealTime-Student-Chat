@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 const messageSchema = new mongoose.Schema(
     {
         text: {
@@ -18,12 +19,19 @@ const messageSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Course",
             required: true
+        },
+
+        replyTo: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Message",
+            default: null
         }
     },
     {
         timestamps: true
     }
 );
+
 
 module.exports = mongoose.model(
     "Message",

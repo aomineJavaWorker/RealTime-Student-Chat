@@ -1,19 +1,27 @@
 const express = require("express");
+
 const Message = require("../models/Message");
 const Course = require("../models/Course");
 
 const router = express.Router();
 
 
+// ==========================================
+// SAŅEMT ZIŅAS
+// ==========================================
+
 router.get("/", async (req, res) => {
 
     try {
 
-        const courseNumber = Number(req.query.course);
+        const courseNumber =
+            Number(req.query.course);
 
-        const course = await Course.findOne({
-            number: courseNumber
-        });
+
+        const course =
+            await Course.findOne({
+                number: courseNumber
+            });
 
 
         if (!course) {
@@ -25,27 +33,49 @@ router.get("/", async (req, res) => {
         }
 
 
-        const messages = await Message.find({
-            course: course._id
-        })
-            .populate("user", "username")
-            .sort({ createdAt: 1 });
+        const messages =
+            await Message.find({
+                course: course._id
+            })
+                .populate(
+                    "user",
+                    "username"
+                )
+                .populate({
+                    path: "replyTo",
+                    populate: {
+                        path: "user",
+                        select: "username"
+                    }
+                })
+                .sort({
+                    createdAt: 1
+                });
 
 
         res.json(messages);
 
     } catch (error) {
 
-        console.error(error);
+        console.error(
+            "Ziņu iegūšanas kļūda:",
+            error
+        );
+
 
         res.status(500).json({
-            message: "Neizdevās iegūt ziņas."
+            message:
+                "Neizdevās iegūt ziņas."
         });
 
     }
 
 });
 
+
+// ==========================================
+// IZVEIDOT ZIŅU
+// ==========================================
 
 router.post("/", async (req, res) => {
 
@@ -54,58 +84,145 @@ router.post("/", async (req, res) => {
         const {
             text,
             userId,
-            courseNumber
+            courseNumber,
+            replyToId
         } = req.body;
 
 
-        if (!text || !userId || !courseNumber) {
+        if (
+            !text ||
+            !userId ||
+            !courseNumber
+        ) {
 
             return res.status(400).json({
-                message: "Trūkst nepieciešamo datu."
+                message:
+                    "Trūkst nepieciešamo datu."
             });
 
         }
 
 
-        const course = await Course.findOne({
-            number: courseNumber
-        });
+        const trimmedText =
+            text.trim();
+
+
+        if (trimmedText === "") {
+
+            return res.status(400).json({
+                message:
+                    "Ziņa nevar būt tukša."
+            });
+
+        }
+
+
+        const course =
+            await Course.findOne({
+                number: courseNumber
+            });
 
 
         if (!course) {
 
             return res.status(404).json({
-                message: "Kurss nav atrasts."
+                message:
+                    "Kurss nav atrasts."
             });
 
         }
 
 
-        let message = await Message.create({
-            text: text.trim(),
-            user: userId,
-            course: course._id
-        });
+        let replyTo = null;
 
 
-        message = await message.populate(
-            "user",
-            "username"
-        );
+        if (replyToId) {
+
+            const replyMessage =
+                await Message.findById(
+                    replyToId
+                );
 
 
-        const messageData = message.toObject();
+            if (!replyMessage) {
+
+                return res.status(404).json({
+                    message:
+                        "Atbildes ziņa nav atrasta."
+                });
+
+            }
+
+
+            if (
+                replyMessage.course.toString() !==
+                course._id.toString()
+            ) {
+
+                return res.status(400).json({
+                    message:
+                        "Nevar atbildēt uz cita kursa ziņu."
+                });
+
+            }
+
+
+            replyTo =
+                replyMessage._id;
+
+        }
+
+
+        let message =
+            await Message.create({
+                text:
+                    trimmedText,
+
+                user:
+                    userId,
+
+                course:
+                    course._id,
+
+                replyTo:
+                    replyTo
+            });
+
+
+        message =
+            await Message.findById(
+                message._id
+            )
+                .populate(
+                    "user",
+                    "username"
+                )
+                .populate({
+                    path: "replyTo",
+                    populate: {
+                        path: "user",
+                        select: "username"
+                    }
+                });
+
+
+        const messageData =
+            message.toObject();
 
 
         req.io
-            .to(`course-${courseNumber}`)
+            .to(
+                `course-${courseNumber}`
+            )
             .emit(
                 "newMessage",
                 messageData
             );
 
 
-        res.status(201).json(messageData);
+        res.status(201).json(
+            messageData
+        );
 
     } catch (error) {
 
@@ -114,13 +231,20 @@ router.post("/", async (req, res) => {
             error
         );
 
+
         res.status(500).json({
-            message: "Neizdevās nosūtīt ziņu."
+            message:
+                "Neizdevās nosūtīt ziņu."
         });
 
     }
 
 });
+
+
+// ==========================================
+// REDIĢĒT ZIŅU
+// ==========================================
 
 router.put("/:id", async (req, res) => {
 
@@ -132,62 +256,92 @@ router.put("/:id", async (req, res) => {
         } = req.body;
 
 
-        if (!text || !userId) {
+        if (
+            !text ||
+            !userId
+        ) {
 
             return res.status(400).json({
-                message: "Trūkst nepieciešamo datu."
+                message:
+                    "Trūkst nepieciešamo datu."
             });
 
         }
 
 
-        const message = await Message.findById(
-            req.params.id
-        )
-            .populate(
-                "user",
-                "username"
+        let message =
+            await Message.findById(
+                req.params.id
             )
-            .populate(
-                "course",
-                "number"
-            );
+                .populate(
+                    "user",
+                    "username"
+                )
+                .populate(
+                    "course",
+                    "number"
+                );
 
 
         if (!message) {
 
             return res.status(404).json({
-                message: "Ziņa nav atrasta."
+                message:
+                    "Ziņa nav atrasta."
             });
 
         }
 
 
         if (
-            message.user._id.toString() !== userId
+            message.user._id.toString() !==
+            userId
         ) {
 
             return res.status(403).json({
-                message: "Tu nevari rediģēt cita lietotāja ziņu."
+                message:
+                    "Tu nevari rediģēt cita lietotāja ziņu."
             });
 
         }
 
 
-        const newText = text.trim();
+        const newText =
+            text.trim();
+
 
         if (newText === "") {
 
             return res.status(400).json({
-                message: "Ziņa nevar būt tukša."
+                message:
+                    "Ziņa nevar būt tukša."
             });
 
         }
 
 
-        message.text = newText;
+        message.text =
+            newText;
+
 
         await message.save();
+
+
+        message =
+            await Message.findById(
+                message._id
+            )
+                .populate(
+                    "user",
+                    "username"
+                )
+                .populate({
+                    path: "replyTo",
+                    populate: {
+                        path: "user",
+                        select: "username"
+                    }
+                });
 
 
         const messageData =
@@ -195,14 +349,18 @@ router.put("/:id", async (req, res) => {
 
 
         req.io
-            .to(`course-${message.course.number}`)
+            .to(
+                `course-${message.course.number}`
+            )
             .emit(
                 "messageUpdated",
                 messageData
             );
 
 
-        res.json(messageData);
+        res.json(
+            messageData
+        );
 
     } catch (error) {
 
@@ -211,50 +369,68 @@ router.put("/:id", async (req, res) => {
             error
         );
 
+
         res.status(500).json({
-            message: "Neizdevās rediģēt ziņu."
+            message:
+                "Neizdevās rediģēt ziņu."
         });
 
     }
 
 });
 
+
+// ==========================================
+// DZĒST ZIŅU
+// ==========================================
+
 router.delete("/:id", async (req, res) => {
 
     try {
 
-        const { userId } = req.body;
+        const {
+            userId
+        } = req.body;
+
 
         if (!userId) {
 
             return res.status(400).json({
-                message: "Nav norādīts lietotājs."
+                message:
+                    "Nav norādīts lietotājs."
             });
 
         }
 
 
-        const message = await Message.findById(
-            req.params.id
-        ).populate(
-            "course",
-            "number"
-        );
+        const message =
+            await Message.findById(
+                req.params.id
+            )
+                .populate(
+                    "course",
+                    "number"
+                );
 
 
         if (!message) {
 
             return res.status(404).json({
-                message: "Ziņa nav atrasta."
+                message:
+                    "Ziņa nav atrasta."
             });
 
         }
 
 
-        if (message.user.toString() !== userId) {
+        if (
+            message.user.toString() !==
+            userId
+        ) {
 
             return res.status(403).json({
-                message: "Tu nevari dzēst cita lietotāja ziņu."
+                message:
+                    "Tu nevari dzēst cita lietotāja ziņu."
             });
 
         }
@@ -270,7 +446,9 @@ router.delete("/:id", async (req, res) => {
 
 
         req.io
-            .to(`course-${courseNumber}`)
+            .to(
+                `course-${courseNumber}`
+            )
             .emit(
                 "messageDeleted",
                 message._id.toString()
@@ -278,7 +456,8 @@ router.delete("/:id", async (req, res) => {
 
 
         res.json({
-            message: "Ziņa izdzēsta."
+            message:
+                "Ziņa izdzēsta."
         });
 
     } catch (error) {
@@ -288,8 +467,10 @@ router.delete("/:id", async (req, res) => {
             error
         );
 
+
         res.status(500).json({
-            message: "Neizdevās izdzēst ziņu."
+            message:
+                "Neizdevās izdzēst ziņu."
         });
 
     }
