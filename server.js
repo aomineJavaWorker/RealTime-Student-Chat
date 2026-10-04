@@ -13,20 +13,23 @@ const messageRoutes = require("./src/routes/messages");
 const Course = require("./src/models/Course");
 
 const app = express();
-
 const server = http.createServer(app);
-
 const io = new Server(server);
-
-app.use((req, res, next) => {
-    req.io = io;
-    next();
-});
 
 const PORT = process.env.PORT || 3000;
 
 
-// Socket.IO būs pieejams arī routes failos
+// ==========================================
+// SOCKET.IO PIEEJAMS ROUTES FAILOS
+// ==========================================
+
+app.use((req, res, next) => {
+
+    req.io = io;
+
+    next();
+
+});
 
 
 app.use(express.json());
@@ -43,9 +46,64 @@ app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
 
 
-// =========================
+// ==========================================
+// TIEŠSAISTES LIETOTĀJI
+// ==========================================
+
+// socket.id -> lietotāja informācija
+const onlineUsers = new Map();
+
+
+function getOnlineUsersForCourse(courseNumber) {
+
+    const uniqueUsers = new Map();
+
+
+    for (const user of onlineUsers.values()) {
+
+        if (user.courseNumber === courseNumber) {
+
+            uniqueUsers.set(
+                user.userId,
+                {
+                    userId: user.userId,
+                    username: user.username
+                }
+            );
+
+        }
+
+    }
+
+
+    return Array.from(
+        uniqueUsers.values()
+    );
+
+}
+
+
+function sendOnlineUsers(courseNumber) {
+
+    const users =
+        getOnlineUsersForCourse(
+            courseNumber
+        );
+
+
+    io
+        .to(`course-${courseNumber}`)
+        .emit(
+            "onlineUsers",
+            users
+        );
+
+}
+
+
+// ==========================================
 // SOCKET.IO
-// =========================
+// ==========================================
 
 io.on("connection", (socket) => {
 
@@ -55,61 +113,171 @@ io.on("connection", (socket) => {
     );
 
 
-    socket.on("joinCourse", (courseNumber) => {
+    socket.on(
+        "joinCourse",
+        (data) => {
 
-        const roomName =
-            `course-${courseNumber}`;
+            const courseNumber =
+                Number(data.courseNumber);
 
-        socket.join(roomName);
+            const userId =
+                data.userId;
 
-        console.log(
-            `Lietotājs ${socket.id} pievienojās ${roomName}`
-        );
-
-    });
+            const username =
+                data.username?.trim();
 
 
-    socket.on("disconnect", () => {
+            if (
+                !courseNumber ||
+                !userId ||
+                !username
+            ) {
 
-        console.log(
-            "Lietotājs atvienojās:",
-            socket.id
-        );
+                return;
 
-    });
+            }
+
+
+            // Ja socket jau bija citā kursā
+            const previousUser =
+                onlineUsers.get(
+                    socket.id
+                );
+
+
+            if (previousUser) {
+
+                socket.leave(
+                    `course-${previousUser.courseNumber}`
+                );
+
+                onlineUsers.delete(
+                    socket.id
+                );
+
+
+                sendOnlineUsers(
+                    previousUser.courseNumber
+                );
+
+            }
+
+
+            const roomName =
+                `course-${courseNumber}`;
+
+
+            socket.join(
+                roomName
+            );
+
+
+            onlineUsers.set(
+                socket.id,
+                {
+                    userId,
+                    username,
+                    courseNumber
+                }
+            );
+
+
+            console.log(
+                `${username} pievienojās ${roomName}`
+            );
+
+
+            sendOnlineUsers(
+                courseNumber
+            );
+
+        }
+    );
+
+
+    socket.on(
+        "disconnect",
+        () => {
+
+            const user =
+                onlineUsers.get(
+                    socket.id
+                );
+
+
+            if (user) {
+
+                onlineUsers.delete(
+                    socket.id
+                );
+
+
+                sendOnlineUsers(
+                    user.courseNumber
+                );
+
+            }
+
+
+            console.log(
+                "Lietotājs atvienojās:",
+                socket.id
+            );
+
+        }
+    );
 
 });
 
 
-// =========================
+// ==========================================
 // NOKLUSĒJUMA KURSI
-// =========================
+// ==========================================
 
 async function createDefaultCourses() {
 
     const courses = [
-        { number: 1, name: "1. kurss" },
-        { number: 2, name: "2. kurss" },
-        { number: 3, name: "3. kurss" },
-        { number: 4, name: "4. kurss" }
+        {
+            number: 1,
+            name: "1. kurss"
+        },
+        {
+            number: 2,
+            name: "2. kurss"
+        },
+        {
+            number: 3,
+            name: "3. kurss"
+        },
+        {
+            number: 4,
+            name: "4. kurss"
+        }
     ];
 
 
     for (const course of courses) {
 
         await Course.updateOne(
-            { number: course.number },
-            { $set: course },
-            { upsert: true }
+            {
+                number: course.number
+            },
+            {
+                $set: course
+            },
+            {
+                upsert: true
+            }
         );
 
     }
+
 }
 
 
-// =========================
+// ==========================================
 // SERVERA PALAIŠANA
-// =========================
+// ==========================================
 
 async function startServer() {
 
@@ -119,20 +287,25 @@ async function startServer() {
             process.env.MONGODB_URI
         );
 
+
         console.log(
             "MongoDB savienojums izveidots!"
         );
 
+
         await createDefaultCourses();
 
 
-        server.listen(PORT, () => {
+        server.listen(
+            PORT,
+            () => {
 
-            console.log(
-                `Serveris darbojas: http://localhost:${PORT}`
-            );
+                console.log(
+                    `Serveris darbojas: http://localhost:${PORT}`
+                );
 
-        });
+            }
+        );
 
     } catch (error) {
 
