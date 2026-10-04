@@ -120,9 +120,26 @@ const cancelReplyButton =
     );
 
 
+const searchInput =
+    document.getElementById(
+        "searchInput"
+    );
+
+
+const clearSearchButton =
+    document.getElementById(
+        "clearSearchButton"
+    );
+
+
+const searchEmpty =
+    document.getElementById(
+        "searchEmpty"
+    );
+
+
 let currentUserId = null;
 let currentUsername = null;
-
 let currentReplyTo = null;
 
 
@@ -227,6 +244,10 @@ async function loadMessages() {
                 </p>
             `;
 
+            searchEmpty.classList.add(
+                "d-none"
+            );
+
             return;
 
         }
@@ -241,6 +262,9 @@ async function loadMessages() {
 
             }
         );
+
+
+        applyMessageSearch();
 
     } catch (error) {
 
@@ -285,7 +309,8 @@ joinButton.addEventListener(
                 await fetch(
                     "/api/users",
                     {
-                        method: "POST",
+                        method:
+                            "POST",
 
                         headers: {
                             "Content-Type":
@@ -394,6 +419,7 @@ function addMessageToChat(message) {
 
 
     messageElement.classList.add(
+        "chat-message",
         "border-bottom",
         "pb-3",
         "mb-3"
@@ -406,6 +432,10 @@ function addMessageToChat(message) {
 
     messageElement.dataset.messageText =
         message.text;
+
+
+    messageElement.dataset.username =
+        message.user?.username || "";
 
 
     const messageHeader =
@@ -747,6 +777,121 @@ function addMessageToChat(message) {
 
 
 // ==========================================
+// MEKLĒT ZIŅAS
+// ==========================================
+
+function applyMessageSearch() {
+
+    const searchValue =
+        searchInput.value
+            .trim()
+            .toLowerCase();
+
+
+    const messageElements =
+        messages.querySelectorAll(
+            ".chat-message"
+        );
+
+
+    let visibleMessages = 0;
+
+
+    messageElements.forEach(
+        (messageElement) => {
+
+            const messageText =
+                messageElement
+                    .dataset
+                    .messageText
+                    .toLowerCase();
+
+
+            const username =
+                messageElement
+                    .dataset
+                    .username
+                    .toLowerCase();
+
+
+            const matches =
+                messageText.includes(
+                    searchValue
+                ) ||
+                username.includes(
+                    searchValue
+                );
+
+
+            if (matches) {
+
+                messageElement.classList.remove(
+                    "d-none"
+                );
+
+                visibleMessages++;
+
+            } else {
+
+                messageElement.classList.add(
+                    "d-none"
+                );
+
+            }
+
+        }
+    );
+
+
+    if (
+        searchValue !== "" &&
+        messageElements.length > 0 &&
+        visibleMessages === 0
+    ) {
+
+        searchEmpty.classList.remove(
+            "d-none"
+        );
+
+    } else {
+
+        searchEmpty.classList.add(
+            "d-none"
+        );
+
+    }
+
+}
+
+
+searchInput.addEventListener(
+    "input",
+    () => {
+
+        applyMessageSearch();
+
+    }
+);
+
+
+clearSearchButton.addEventListener(
+    "click",
+    () => {
+
+        searchInput.value =
+            "";
+
+
+        applyMessageSearch();
+
+
+        searchInput.focus();
+
+    }
+);
+
+
+// ==========================================
 // SĀKT ATBILDI
 // ==========================================
 
@@ -860,7 +1005,7 @@ function addEditedLabel(
 
 
 // ==========================================
-// REDIĢĒT
+// REDIĢĒT ZIŅU
 // ==========================================
 
 async function editMessage(
@@ -951,7 +1096,7 @@ async function editMessage(
 
 
 // ==========================================
-// DZĒST
+// DZĒST ZIŅU
 // ==========================================
 
 async function deleteMessage(
@@ -1020,6 +1165,9 @@ socket.on(
             message
         );
 
+
+        applyMessageSearch();
+
     }
 );
 
@@ -1072,6 +1220,9 @@ socket.on(
             textElement
         );
 
+
+        applyMessageSearch();
+
     }
 );
 
@@ -1108,8 +1259,14 @@ socket.on(
         }
 
 
+        const remainingMessages =
+            messages.querySelectorAll(
+                ".chat-message"
+            );
+
+
         if (
-            messages.children.length === 0
+            remainingMessages.length === 0
         ) {
 
             messages.innerHTML = `
@@ -1123,12 +1280,15 @@ socket.on(
 
         }
 
+
+        applyMessageSearch();
+
     }
 );
 
 
 // ==========================================
-// ONLINE USERS
+// TIEŠSAISTES LIETOTĀJI
 // ==========================================
 
 socket.on(
