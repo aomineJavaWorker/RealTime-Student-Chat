@@ -21,16 +21,13 @@ const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
-
 if (isProduction) {
     app.set("trust proxy", 1);
 }
 
-
 if (!process.env.MONGODB_URI) {
     throw new Error("MONGODB_URI nav konfigurēts.");
 }
-
 
 if (!process.env.SESSION_SECRET) {
     throw new Error("SESSION_SECRET nav konfigurēts.");
@@ -43,11 +40,8 @@ if (!process.env.SESSION_SECRET) {
 
 const sessionMiddleware = session({
     name: "studentChatSession",
-
     secret: process.env.SESSION_SECRET,
-
     resave: false,
-
     saveUninitialized: false,
 
     store: MongoStore.create({
@@ -63,11 +57,9 @@ const sessionMiddleware = session({
     }
 });
 
-
 app.use(sessionMiddleware);
 
-
-// Socket.IO arī izmanto to pašu session
+// Socket.IO использует ту же session
 io.engine.use(sessionMiddleware);
 
 
@@ -76,7 +68,6 @@ io.engine.use(sessionMiddleware);
 // ==========================================
 
 app.use(express.json());
-
 
 app.use(
     express.static(
@@ -99,22 +90,9 @@ app.use((req, res, next) => {
 // ROUTES
 // ==========================================
 
-app.use(
-    "/api/courses",
-    courseRoutes
-);
-
-
-app.use(
-    "/api/auth",
-    authRoutes
-);
-
-
-app.use(
-    "/api/messages",
-    messageRoutes
-);
+app.use("/api/courses", courseRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
 
 // ==========================================
@@ -123,16 +101,15 @@ app.use(
 
 const onlineUsers = new Map();
 
+// socket.id пользователей, которые сейчас печатают
+const typingSockets = new Set();
+
 
 function getOnlineUsersForCourse(courseNumber) {
-
     const uniqueUsers = new Map();
 
-
     for (const user of onlineUsers.values()) {
-
         if (user.courseNumber === courseNumber) {
-
             uniqueUsers.set(
                 user.userId,
                 {
@@ -140,30 +117,58 @@ function getOnlineUsersForCourse(courseNumber) {
                     username: user.username
                 }
             );
-
         }
-
     }
 
-
-    return Array.from(
-        uniqueUsers.values()
-    );
-
+    return Array.from(uniqueUsers.values());
 }
 
 
 function sendOnlineUsers(courseNumber) {
-
     io
         .to(`course-${courseNumber}`)
         .emit(
             "onlineUsers",
-            getOnlineUsersForCourse(
-                courseNumber
-            )
+            getOnlineUsersForCourse(courseNumber)
         );
+}
 
+
+// ==========================================
+// TYPING USERS
+// ==========================================
+
+function getTypingUsersForCourse(courseNumber) {
+    const uniqueUsers = new Map();
+
+    for (const socketId of typingSockets) {
+        const user = onlineUsers.get(socketId);
+
+        if (
+            user &&
+            user.courseNumber === courseNumber
+        ) {
+            uniqueUsers.set(
+                user.userId,
+                {
+                    userId: user.userId,
+                    username: user.username
+                }
+            );
+        }
+    }
+
+    return Array.from(uniqueUsers.values());
+}
+
+
+function sendTypingUsers(courseNumber) {
+    io
+        .to(`course-${courseNumber}`)
+        .emit(
+            "typingUsers",
+            getTypingUsersForCourse(courseNumber)
+        );
 }
 
 
@@ -171,141 +176,180 @@ function sendOnlineUsers(courseNumber) {
 // SOCKET.IO
 // ==========================================
 
-io.on(
-    "connection",
-    (socket) => {
+io.on("connection", (socket) => {
+    console.log(
+        "Lietotājs pieslēdzās:",
+        socket.id
+    );
 
-        console.log(
-            "Lietotājs pieslēdzās:",
+
+    // ======================================
+    // JOIN COURSE
+    // ======================================
+
+    socket.on("joinCourse", () => {
+        const sessionData = socket.request.session;
+
+        if (
+            !sessionData ||
+            !sessionData.userId ||
+            !sessionData.username ||
+            !sessionData.courseNumber
+        ) {
+            return;
+        }
+
+        const userId = String(
+            sessionData.userId
+        );
+
+        const username = String(
+            sessionData.username
+        );
+
+        const courseNumber = Number(
+            sessionData.courseNumber
+        );
+
+
+        const previousUser = onlineUsers.get(
             socket.id
         );
 
 
-        socket.on(
-            "joinCourse",
-            () => {
+        if (previousUser) {
+            typingSockets.delete(
+                socket.id
+            );
 
-                const sessionData =
-                    socket.request.session;
+            socket.leave(
+                `course-${previousUser.courseNumber}`
+            );
 
+            onlineUsers.delete(
+                socket.id
+            );
 
-                if (
-                    !sessionData ||
-                    !sessionData.userId ||
-                    !sessionData.username ||
-                    !sessionData.courseNumber
-                ) {
+            sendOnlineUsers(
+                previousUser.courseNumber
+            );
 
-                    return;
-
-                }
-
-
-                const userId =
-                    String(
-                        sessionData.userId
-                    );
+            sendTypingUsers(
+                previousUser.courseNumber
+            );
+        }
 
 
-                const username =
-                    String(
-                        sessionData.username
-                    );
+        socket.join(
+            `course-${courseNumber}`
+        );
 
 
-                const courseNumber =
-                    Number(
-                        sessionData.courseNumber
-                    );
-
-
-                const previousUser =
-                    onlineUsers.get(
-                        socket.id
-                    );
-
-
-                if (previousUser) {
-
-                    socket.leave(
-                        `course-${previousUser.courseNumber}`
-                    );
-
-
-                    onlineUsers.delete(
-                        socket.id
-                    );
-
-
-                    sendOnlineUsers(
-                        previousUser.courseNumber
-                    );
-
-                }
-
-
-                socket.join(
-                    `course-${courseNumber}`
-                );
-
-
-                onlineUsers.set(
-                    socket.id,
-                    {
-                        userId,
-                        username,
-                        courseNumber
-                    }
-                );
-
-
-                console.log(
-                    `${username} pievienojās course-${courseNumber}`
-                );
-
-
-                sendOnlineUsers(
-                    courseNumber
-                );
-
+        onlineUsers.set(
+            socket.id,
+            {
+                userId,
+                username,
+                courseNumber
             }
         );
 
 
-        socket.on(
-            "disconnect",
-            () => {
-
-                const user =
-                    onlineUsers.get(
-                        socket.id
-                    );
-
-
-                if (user) {
-
-                    onlineUsers.delete(
-                        socket.id
-                    );
-
-
-                    sendOnlineUsers(
-                        user.courseNumber
-                    );
-
-                }
-
-
-                console.log(
-                    "Lietotājs atvienojās:",
-                    socket.id
-                );
-
-            }
+        console.log(
+            `${username} pievienojās course-${courseNumber}`
         );
 
-    }
-);
+
+        sendOnlineUsers(
+            courseNumber
+        );
+
+        sendTypingUsers(
+            courseNumber
+        );
+    });
+
+
+    // ======================================
+    // TYPING START
+    // ======================================
+
+    socket.on("typingStart", () => {
+        const user = onlineUsers.get(
+            socket.id
+        );
+
+        if (!user) {
+            return;
+        }
+
+        typingSockets.add(
+            socket.id
+        );
+
+        sendTypingUsers(
+            user.courseNumber
+        );
+    });
+
+
+    // ======================================
+    // TYPING STOP
+    // ======================================
+
+    socket.on("typingStop", () => {
+        const user = onlineUsers.get(
+            socket.id
+        );
+
+        typingSockets.delete(
+            socket.id
+        );
+
+        if (user) {
+            sendTypingUsers(
+                user.courseNumber
+            );
+        }
+    });
+
+
+    // ======================================
+    // DISCONNECT
+    // ======================================
+
+    socket.on("disconnect", () => {
+        const user = onlineUsers.get(
+            socket.id
+        );
+
+
+        typingSockets.delete(
+            socket.id
+        );
+
+
+        if (user) {
+            onlineUsers.delete(
+                socket.id
+            );
+
+            sendOnlineUsers(
+                user.courseNumber
+            );
+
+            sendTypingUsers(
+                user.courseNumber
+            );
+        }
+
+
+        console.log(
+            "Lietotājs atvienojās:",
+            socket.id
+        );
+    });
+});
 
 
 // ==========================================
@@ -313,23 +357,19 @@ io.on(
 // ==========================================
 
 async function createDefaultCourses() {
-
     const courses = [
         {
             number: 1,
             name: "1. kurss"
         },
-
         {
             number: 2,
             name: "2. kurss"
         },
-
         {
             number: 3,
             name: "3. kurss"
         },
-
         {
             number: 4,
             name: "4. kurss"
@@ -338,26 +378,18 @@ async function createDefaultCourses() {
 
 
     for (const course of courses) {
-
         await Course.updateOne(
             {
-                number:
-                    course.number
+                number: course.number
             },
-
             {
-                $set:
-                    course
+                $set: course
             },
-
             {
-                upsert:
-                    true
+                upsert: true
             }
         );
-
     }
-
 }
 
 
@@ -366,45 +398,34 @@ async function createDefaultCourses() {
 // ==========================================
 
 async function startServer() {
-
     try {
-
         await mongoose.connect(
             process.env.MONGODB_URI
         );
-
 
         console.log(
             "MongoDB savienojums izveidots!"
         );
 
-
         await createDefaultCourses();
-
 
         server.listen(
             PORT,
             () => {
-
                 console.log(
                     `Serveris darbojas: http://localhost:${PORT}`
                 );
-
             }
         );
 
     } catch (error) {
-
         console.error(
             "Servera palaišanas kļūda:",
             error
         );
 
-
         process.exitCode = 1;
-
     }
-
 }
 
 

@@ -1,7 +1,6 @@
-const socket =
-    io({
-        autoConnect: false
-    });
+const socket = io({
+    autoConnect: false
+});
 
 
 const loadingMessage =
@@ -9,108 +8,95 @@ const loadingMessage =
         "loadingMessage"
     );
 
-
 const chatSection =
     document.getElementById(
         "chatSection"
     );
-
 
 const chatTitle =
     document.getElementById(
         "chatTitle"
     );
 
-
 const courseName =
     document.getElementById(
         "courseName"
     );
-
 
 const usernameDisplay =
     document.getElementById(
         "usernameDisplay"
     );
 
-
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
-
 
 const messages =
     document.getElementById(
         "messages"
     );
 
-
 const messageInput =
     document.getElementById(
         "messageInput"
     );
-
 
 const sendButton =
     document.getElementById(
         "sendButton"
     );
 
-
 const messageError =
     document.getElementById(
         "messageError"
     );
-
 
 const onlineUsers =
     document.getElementById(
         "onlineUsers"
     );
 
-
 const onlineUsersCount =
     document.getElementById(
         "onlineUsersCount"
     );
 
+const typingIndicator =
+    document.getElementById(
+        "typingIndicator"
+    );
 
 const replyPreview =
     document.getElementById(
         "replyPreview"
     );
 
-
 const replyUsername =
     document.getElementById(
         "replyUsername"
     );
-
 
 const replyText =
     document.getElementById(
         "replyText"
     );
 
-
 const cancelReplyButton =
     document.getElementById(
         "cancelReplyButton"
     );
-
 
 const searchInput =
     document.getElementById(
         "searchInput"
     );
 
-
 const clearSearchButton =
     document.getElementById(
         "clearSearchButton"
     );
-
 
 const searchEmpty =
     document.getElementById(
@@ -122,6 +108,9 @@ let currentUserId = null;
 let currentUsername = null;
 let currentCourseNumber = null;
 let currentReplyTo = null;
+
+let typingTimer = null;
+let isTyping = false;
 
 
 const reactionTypes = [
@@ -145,14 +134,11 @@ const reactionTypes = [
 // ==========================================
 
 async function initializeChat() {
-
     try {
-
         const response =
             await fetch(
                 "/api/auth/me"
             );
-
 
         const data =
             await response.json();
@@ -162,12 +148,10 @@ async function initializeChat() {
             !response.ok ||
             !data.authenticated
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
@@ -176,10 +160,8 @@ async function initializeChat() {
                 data.user._id
             );
 
-
         currentUsername =
             data.user.username;
-
 
         currentCourseNumber =
             Number(
@@ -219,27 +201,19 @@ async function initializeChat() {
         messageInput.focus();
 
     } catch (error) {
-
         loadingMessage.classList.remove(
             "alert-light"
         );
-
 
         loadingMessage.classList.add(
             "alert-danger"
         );
 
-
         loadingMessage.textContent =
             "Neizdevās ielādēt čatu.";
 
-
-        console.error(
-            error
-        );
-
+        console.error(error);
     }
-
 }
 
 
@@ -248,25 +222,34 @@ async function initializeChat() {
 // ==========================================
 
 function joinSocketCourse() {
-
     if (!currentUserId) {
         return;
     }
 
-
     socket.emit(
         "joinCourse"
     );
-
 }
 
 
 socket.on(
     "connect",
     () => {
+        isTyping = false;
 
         joinSocketCourse();
+    }
+);
 
+
+socket.on(
+    "disconnect",
+    () => {
+        isTyping = false;
+
+        clearTimeout(
+            typingTimer
+        );
     }
 );
 
@@ -274,11 +257,146 @@ socket.on(
 socket.on(
     "connect_error",
     () => {
-
         showMessageError(
             "Neizdevās izveidot reāllaika savienojumu."
         );
+    }
+);
 
+
+// ==========================================
+// TYPING
+// ==========================================
+
+function startTyping() {
+    if (
+        !currentUserId ||
+        !socket.connected
+    ) {
+        return;
+    }
+
+
+    if (!isTyping) {
+        socket.emit(
+            "typingStart"
+        );
+
+        isTyping = true;
+    }
+
+
+    clearTimeout(
+        typingTimer
+    );
+
+
+    typingTimer =
+        setTimeout(
+            stopTyping,
+            1200
+        );
+}
+
+
+function stopTyping() {
+    clearTimeout(
+        typingTimer
+    );
+
+
+    if (
+        isTyping &&
+        socket.connected
+    ) {
+        socket.emit(
+            "typingStop"
+        );
+    }
+
+
+    isTyping = false;
+}
+
+
+messageInput.addEventListener(
+    "input",
+    () => {
+        if (
+            messageInput.value
+                .trim() === ""
+        ) {
+            stopTyping();
+            return;
+        }
+
+
+        startTyping();
+    }
+);
+
+
+messageInput.addEventListener(
+    "blur",
+    () => {
+        stopTyping();
+    }
+);
+
+
+// ==========================================
+// TYPING USERS REAL-TIME
+// ==========================================
+
+socket.on(
+    "typingUsers",
+    (users) => {
+
+        const otherUsers =
+            users.filter(
+                (user) =>
+                    String(user.userId) !==
+                    String(currentUserId)
+            );
+
+
+        if (
+            otherUsers.length === 0
+        ) {
+            typingIndicator.textContent =
+                "";
+
+            typingIndicator.classList.add(
+                "d-none"
+            );
+
+            return;
+        }
+
+
+        if (
+            otherUsers.length === 1
+        ) {
+            typingIndicator.textContent =
+                `${otherUsers[0].username} raksta...`;
+        }
+
+        else if (
+            otherUsers.length === 2
+        ) {
+            typingIndicator.textContent =
+                `${otherUsers[0].username} un ${otherUsers[1].username} raksta...`;
+        }
+
+        else {
+            typingIndicator.textContent =
+                `${otherUsers[0].username}, ${otherUsers[1].username} un vēl ${otherUsers.length - 2} raksta...`;
+        }
+
+
+        typingIndicator.classList.remove(
+            "d-none"
+        );
     }
 );
 
@@ -288,14 +406,11 @@ socket.on(
 // ==========================================
 
 async function loadMessages() {
-
     try {
-
         const response =
             await fetch(
                 "/api/messages"
             );
-
 
         const data =
             await response.json();
@@ -304,37 +419,29 @@ async function loadMessages() {
         if (
             response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās ielādēt ziņas."
             );
-
         }
 
 
-        messages.innerHTML =
-            "";
+        messages.innerHTML = "";
 
 
         if (
             data.length === 0
         ) {
-
             showEmptyMessages();
-
             return;
-
         }
 
 
@@ -348,18 +455,15 @@ async function loadMessages() {
         scrollMessagesToBottom();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
 // ==========================================
-// ADD MESSAGE TO UI
+// ADD MESSAGE
 // ==========================================
 
 function addMessageToChat(message) {
@@ -369,9 +473,7 @@ function addMessageToChat(message) {
             `[data-message-id="${message._id}"]`
         )
     ) {
-
         return;
-
     }
 
 
@@ -399,18 +501,15 @@ function addMessageToChat(message) {
     messageElement.dataset.messageId =
         message._id;
 
-
     messageElement.dataset.messageText =
         message.text;
 
-
     messageElement.dataset.username =
-        message.user?.username ||
-        "";
+        message.user?.username || "";
 
 
     // ======================================
-    // DOUBLE CLICK = LIKE
+    // DOUBLE CLICK = 👍
     // ======================================
 
     messageElement.addEventListener(
@@ -422,9 +521,7 @@ function addMessageToChat(message) {
                     "button, a, input"
                 )
             ) {
-
                 return;
-
             }
 
 
@@ -432,7 +529,6 @@ function addMessageToChat(message) {
                 message._id,
                 "👍"
             );
-
         }
     );
 
@@ -497,7 +593,6 @@ function addMessageToChat(message) {
 
 
     if (message.createdAt) {
-
         timeElement.textContent =
             new Date(
                 message.createdAt
@@ -512,7 +607,6 @@ function addMessageToChat(message) {
                             "2-digit"
                     }
                 );
-
     }
 
 
@@ -533,7 +627,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // REPLY BUTTON
+    // REPLY
     // ======================================
 
     const replyButton =
@@ -560,13 +654,15 @@ function addMessageToChat(message) {
     replyButton.addEventListener(
         "click",
         () => {
-
             startReply(
                 message._id,
-                messageElement.dataset.username,
-                messageElement.dataset.messageText
+                messageElement
+                    .dataset
+                    .username,
+                messageElement
+                    .dataset
+                    .messageText
             );
-
         }
     );
 
@@ -577,7 +673,7 @@ function addMessageToChat(message) {
 
 
     // ======================================
-    // OWN MESSAGE BUTTONS
+    // OWN MESSAGE
     // ======================================
 
     if (
@@ -614,14 +710,12 @@ function addMessageToChat(message) {
         editButton.addEventListener(
             "click",
             () => {
-
                 editMessage(
                     message._id,
                     messageElement
                         .dataset
                         .messageText
                 );
-
             }
         );
 
@@ -655,11 +749,9 @@ function addMessageToChat(message) {
         deleteButton.addEventListener(
             "click",
             () => {
-
                 deleteMessage(
                     message._id
                 );
-
             }
         );
 
@@ -667,7 +759,6 @@ function addMessageToChat(message) {
         rightSide.appendChild(
             deleteButton
         );
-
     }
 
 
@@ -758,7 +849,6 @@ function addMessageToChat(message) {
         messageElement.appendChild(
             replyElement
         );
-
     }
 
 
@@ -783,11 +873,9 @@ function addMessageToChat(message) {
 
 
     if (message.editedAt) {
-
         addEditedLabel(
             textElement
         );
-
     }
 
 
@@ -829,17 +917,14 @@ function addMessageToChat(message) {
         messageElement,
         message.reactions || []
     );
-
 }
 
 
 // ==========================================
-// REACTION DROPDOWN
+// REACTION MENU
 // ==========================================
 
-function createReactionMenu(
-    messageId
-) {
+function createReactionMenu(messageId) {
 
     const dropdown =
         document.createElement(
@@ -949,12 +1034,10 @@ function createReactionMenu(
             button.addEventListener(
                 "click",
                 () => {
-
                     toggleReaction(
                         messageId,
                         reaction
                     );
-
                 }
             );
 
@@ -967,7 +1050,6 @@ function createReactionMenu(
             row.appendChild(
                 column
             );
-
         }
     );
 
@@ -988,7 +1070,6 @@ function createReactionMenu(
 
 
     return dropdown;
-
 }
 
 
@@ -1035,18 +1116,15 @@ function renderReactions(
                                 reaction.user !==
                                     null
                             ) {
-
                                 return String(
                                     reaction.user._id
                                 );
-
                             }
 
 
                             return String(
                                 reaction.user
                             );
-
                         }
                     );
 
@@ -1055,9 +1133,7 @@ function renderReactions(
                 reactionUsers.length ===
                 0
             ) {
-
                 return;
-
             }
 
 
@@ -1099,15 +1175,12 @@ function renderReactions(
             button.addEventListener(
                 "click",
                 () => {
-
                     toggleReaction(
                         messageElement
                             .dataset
                             .messageId,
-
                         reactionType
                     );
-
                 }
             );
 
@@ -1115,10 +1188,8 @@ function renderReactions(
             container.appendChild(
                 button
             );
-
         }
     );
-
 }
 
 
@@ -1130,9 +1201,7 @@ async function toggleReaction(
     messageId,
     reaction
 ) {
-
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}/reaction`,
@@ -1161,35 +1230,28 @@ async function toggleReaction(
         if (
             response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās saglabāt reakciju."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
@@ -1248,11 +1310,8 @@ function applyMessageSearch() {
 
 
             if (matches) {
-
                 visibleMessages++;
-
             }
-
         }
     );
 
@@ -1264,7 +1323,6 @@ function applyMessageSearch() {
         messageElements.length === 0 ||
         visibleMessages > 0
     );
-
 }
 
 
@@ -1277,16 +1335,12 @@ searchInput.addEventListener(
 clearSearchButton.addEventListener(
     "click",
     () => {
-
         searchInput.value =
             "";
 
-
         applyMessageSearch();
 
-
         searchInput.focus();
-
     }
 );
 
@@ -1300,7 +1354,6 @@ function startReply(
     username,
     text
 ) {
-
     currentReplyTo = {
         id:
             messageId,
@@ -1327,12 +1380,10 @@ function startReply(
 
 
     messageInput.focus();
-
 }
 
 
 function cancelReply() {
-
     currentReplyTo =
         null;
 
@@ -1348,7 +1399,6 @@ function cancelReply() {
     replyPreview.classList.add(
         "d-none"
     );
-
 }
 
 
@@ -1365,7 +1415,6 @@ cancelReplyButton.addEventListener(
 function addEditedLabel(
     textElement
 ) {
-
     textElement
         .querySelector(
             ".edited-label"
@@ -1393,12 +1442,11 @@ function addEditedLabel(
     textElement.appendChild(
         editedElement
     );
-
 }
 
 
 // ==========================================
-// EDIT
+// EDIT MESSAGE
 // ==========================================
 
 async function editMessage(
@@ -1416,9 +1464,7 @@ async function editMessage(
     if (
         newText === null
     ) {
-
         return;
-
     }
 
 
@@ -1427,18 +1473,15 @@ async function editMessage(
 
 
     if (!trimmedText) {
-
         showMessageError(
             "Ziņa nevar būt tukša."
         );
 
         return;
-
     }
 
 
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -1467,48 +1510,39 @@ async function editMessage(
         if (
             response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās rediģēt ziņu."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
 // ==========================================
-// DELETE
+// DELETE MESSAGE
 // ==========================================
 
 async function deleteMessage(
     messageId
 ) {
-
     try {
-
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -1526,35 +1560,28 @@ async function deleteMessage(
         if (
             response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās izdzēst ziņu."
             );
-
         }
 
 
         hideMessageError();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
-
     }
-
 }
 
 
@@ -1574,7 +1601,6 @@ socket.on(
         applyMessageSearch();
 
         scrollMessagesToBottom();
-
     }
 );
 
@@ -1608,17 +1634,13 @@ socket.on(
 
 
             if (textElement) {
-
                 textElement.textContent =
                     message.text;
-
 
                 addEditedLabel(
                     textElement
                 );
-
             }
-
         }
 
 
@@ -1628,33 +1650,25 @@ socket.on(
             )
             .forEach(
                 (element) => {
-
                     element.textContent =
                         message.text;
-
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(
-                message._id
-            )
+            String(message._id)
         ) {
-
             currentReplyTo.text =
                 message.text;
 
-
             replyText.textContent =
                 message.text;
-
         }
 
 
         applyMessageSearch();
-
     }
 );
 
@@ -1674,14 +1688,11 @@ socket.on(
 
 
         if (messageElement) {
-
             renderReactions(
                 messageElement,
                 data.reactions || []
             );
-
         }
-
     }
 );
 
@@ -1707,23 +1718,17 @@ socket.on(
             )
             .forEach(
                 (element) => {
-
                     element.textContent =
                         "Ziņa izdzēsta";
-
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(
-                messageId
-            )
+            String(messageId)
         ) {
-
             cancelReply();
-
         }
 
 
@@ -1735,14 +1740,11 @@ socket.on(
                 .length ===
             0
         ) {
-
             showEmptyMessages();
-
         }
 
 
         applyMessageSearch();
-
     }
 );
 
@@ -1766,7 +1768,6 @@ socket.on(
         if (
             users.length === 0
         ) {
-
             onlineUsers.innerHTML = `
                 <div class="list-group-item text-secondary">
                     Neviens nav tiešsaistē.
@@ -1774,7 +1775,6 @@ socket.on(
             `;
 
             return;
-
         }
 
 
@@ -1859,17 +1859,14 @@ socket.on(
                     userElement.appendChild(
                         youBadge
                     );
-
                 }
 
 
                 onlineUsers.appendChild(
                     userElement
                 );
-
             }
         );
-
     }
 );
 
@@ -1891,18 +1888,20 @@ async function sendMessage() {
 
 
     if (!text) {
+        stopTyping();
 
         showMessageError(
             "Lūdzu, ievadi ziņu!"
         );
 
         return;
-
     }
 
 
-    try {
+    stopTyping();
 
+
+    try {
         sendButton.disabled =
             true;
 
@@ -1939,22 +1938,18 @@ async function sendMessage() {
         if (
             response.status === 401
         ) {
-
             window.location.href =
                 "/";
 
             return;
-
         }
 
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
                 "Neizdevās nosūtīt ziņu."
             );
-
         }
 
 
@@ -1969,23 +1964,19 @@ async function sendMessage() {
         messageInput.focus();
 
     } catch (error) {
-
         showMessageError(
             error.message
         );
 
     } finally {
-
         sendButton.disabled =
             false;
-
     }
-
 }
 
 
 // ==========================================
-// ENTER
+// ENTER = SEND
 // ==========================================
 
 messageInput.addEventListener(
@@ -1996,13 +1987,10 @@ messageInput.addEventListener(
             event.key === "Enter" &&
             !event.shiftKey
         ) {
-
             event.preventDefault();
 
             sendMessage();
-
         }
-
     }
 );
 
@@ -2016,6 +2004,8 @@ logoutButton.addEventListener(
     async () => {
 
         try {
+            stopTyping();
+
 
             logoutButton.disabled =
                 true;
@@ -2036,12 +2026,10 @@ logoutButton.addEventListener(
 
 
             if (!response.ok) {
-
                 throw new Error(
                     data.message ||
                     "Neizdevās izrakstīties."
                 );
-
             }
 
 
@@ -2052,7 +2040,6 @@ logoutButton.addEventListener(
                 "/";
 
         } catch (error) {
-
             showMessageError(
                 error.message
             );
@@ -2060,9 +2047,7 @@ logoutButton.addEventListener(
 
             logoutButton.disabled =
                 false;
-
         }
-
     }
 );
 
@@ -2072,7 +2057,6 @@ logoutButton.addEventListener(
 // ==========================================
 
 function showEmptyMessages() {
-
     messages.innerHTML = `
         <p
             id="emptyMessages"
@@ -2081,20 +2065,16 @@ function showEmptyMessages() {
             Ziņu vēl nav.
         </p>
     `;
-
 }
 
 
 function scrollMessagesToBottom() {
-
     messages.scrollTop =
         messages.scrollHeight;
-
 }
 
 
 function showMessageError(message) {
-
     messageError.textContent =
         message;
 
@@ -2102,16 +2082,13 @@ function showMessageError(message) {
     messageError.classList.remove(
         "d-none"
     );
-
 }
 
 
 function hideMessageError() {
-
     messageError.classList.add(
         "d-none"
     );
-
 }
 
 
