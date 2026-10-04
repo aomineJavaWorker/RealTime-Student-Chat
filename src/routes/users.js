@@ -9,12 +9,16 @@ router.post("/", async (req, res) => {
 
     try {
 
-        const { username, courseNumber } = req.body;
+        const {
+            username,
+            courseNumber
+        } = req.body;
+
 
         if (!username || !courseNumber) {
 
             return res.status(400).json({
-                message: "Trūkst lietotāja vārda vai kursa."
+                message: "Trūkst nepieciešamo datu."
             });
 
         }
@@ -34,18 +38,33 @@ router.post("/", async (req, res) => {
         }
 
 
-        const user = await User.create({
+        let user = await User.findOne({
             username: username.trim(),
             course: course._id
         });
 
 
-        res.status(201).json(user);
+        if (!user) {
+
+            user = await User.create({
+                username: username.trim(),
+                course: course._id
+            });
+
+        }
+
+
+        res.status(200).json(user);
 
     } catch (error) {
 
+        console.error(
+            "Lietotāja izveides kļūda:",
+            error
+        );
+
         res.status(500).json({
-            message: "Neizdevās izveidot lietotāju."
+            message: "Neizdevās pievienot lietotāju."
         });
 
     }

@@ -117,15 +117,18 @@ joinButton.addEventListener("click", async () => {
 });
 
 function addMessageToChat(message) {
+
     const emptyMessage = messages.querySelector(
-    "p.text-secondary"
+        "p.text-secondary"
     );
 
     if (emptyMessage) {
         emptyMessage.remove();
     }
 
-    const messageElement = document.createElement("div");
+
+    const messageElement =
+        document.createElement("div");
 
     messageElement.classList.add(
         "border-bottom",
@@ -133,8 +136,12 @@ function addMessageToChat(message) {
         "mb-2"
     );
 
+    messageElement.dataset.messageId =
+        message._id;
 
-    const messageHeader = document.createElement("div");
+
+    const messageHeader =
+        document.createElement("div");
 
     messageHeader.classList.add(
         "d-flex",
@@ -143,13 +150,25 @@ function addMessageToChat(message) {
     );
 
 
-    const usernameElement = document.createElement("strong");
+    const usernameElement =
+        document.createElement("strong");
 
     usernameElement.textContent =
         message.user.username;
 
 
-    const timeElement = document.createElement("small");
+    const rightSide =
+        document.createElement("div");
+
+    rightSide.classList.add(
+        "d-flex",
+        "align-items-center",
+        "gap-2"
+    );
+
+
+    const timeElement =
+        document.createElement("small");
 
     timeElement.classList.add(
         "text-secondary"
@@ -158,9 +177,8 @@ function addMessageToChat(message) {
 
     if (message.createdAt) {
 
-    const messageDate = new Date(
-        message.createdAt
-        );
+        const messageDate =
+            new Date(message.createdAt);
 
         timeElement.textContent =
             messageDate.toLocaleTimeString(
@@ -171,9 +189,49 @@ function addMessageToChat(message) {
                 }
             );
 
-    } else {
+    }
 
-        timeElement.textContent = "";
+
+    rightSide.appendChild(
+        timeElement
+    );
+
+
+    if (
+        message.user._id === currentUserId
+    ) {
+
+        const deleteButton =
+            document.createElement("button");
+
+        deleteButton.type = "button";
+
+        deleteButton.classList.add(
+            "btn",
+            "btn-sm",
+            "btn-outline-danger"
+        );
+
+        deleteButton.textContent =
+            "Dzēst";
+
+
+        deleteButton.addEventListener(
+            "click",
+            () => {
+
+                deleteMessage(
+                    message._id
+                );
+
+            }
+        );
+
+
+        rightSide.appendChild(
+            deleteButton
+        );
+
     }
 
 
@@ -182,13 +240,16 @@ function addMessageToChat(message) {
     );
 
     messageHeader.appendChild(
-        timeElement
+        rightSide
     );
 
 
-    const textElement = document.createElement("p");
+    const textElement =
+        document.createElement("p");
 
-    textElement.classList.add("mb-0");
+    textElement.classList.add(
+        "mb-0"
+    );
 
     textElement.textContent =
         message.text;
@@ -202,9 +263,61 @@ function addMessageToChat(message) {
         textElement
     );
 
+
     messages.appendChild(
         messageElement
     );
+}
+
+async function deleteMessage(messageId) {
+
+    try {
+
+        const response = await fetch(
+            `/api/messages/${messageId}`,
+            {
+                method: "DELETE",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    userId: currentUserId
+                })
+            }
+        );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās izdzēst ziņu."
+            );
+
+        }
+
+
+        messageError.classList.add(
+            "d-none"
+        );
+
+    } catch (error) {
+
+        messageError.textContent =
+            error.message;
+
+        messageError.classList.remove(
+            "d-none"
+        );
+
+    }
+
 }
 
 socket.on(
@@ -212,6 +325,36 @@ socket.on(
     (message) => {
 
         addMessageToChat(message);
+
+    }
+);
+
+socket.on(
+    "messageDeleted",
+    (messageId) => {
+
+        const messageElement =
+            messages.querySelector(
+                `[data-message-id="${messageId}"]`
+            );
+
+
+        if (messageElement) {
+
+            messageElement.remove();
+
+        }
+
+
+        if (messages.children.length === 0) {
+
+            messages.innerHTML = `
+                <p class="text-secondary mb-0">
+                    Ziņu vēl nav.
+                </p>
+            `;
+
+        }
 
     }
 );

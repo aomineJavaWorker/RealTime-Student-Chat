@@ -127,10 +127,23 @@ router.delete("/:id", async (req, res) => {
 
     try {
 
-        const message =
-            await Message.findByIdAndDelete(
-                req.params.id
-            );
+        const { userId } = req.body;
+
+        if (!userId) {
+
+            return res.status(400).json({
+                message: "Nav norādīts lietotājs."
+            });
+
+        }
+
+
+        const message = await Message.findById(
+            req.params.id
+        ).populate(
+            "course",
+            "number"
+        );
 
 
         if (!message) {
@@ -142,11 +155,42 @@ router.delete("/:id", async (req, res) => {
         }
 
 
+        if (message.user.toString() !== userId) {
+
+            return res.status(403).json({
+                message: "Tu nevari dzēst cita lietotāja ziņu."
+            });
+
+        }
+
+
+        const courseNumber =
+            message.course.number;
+
+
+        await Message.findByIdAndDelete(
+            req.params.id
+        );
+
+
+        req.io
+            .to(`course-${courseNumber}`)
+            .emit(
+                "messageDeleted",
+                message._id.toString()
+            );
+
+
         res.json({
             message: "Ziņa izdzēsta."
         });
 
     } catch (error) {
+
+        console.error(
+            "Ziņas dzēšanas kļūda:",
+            error
+        );
 
         res.status(500).json({
             message: "Neizdevās izdzēst ziņu."
