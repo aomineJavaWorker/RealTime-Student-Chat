@@ -8,126 +8,105 @@ const loadingMessage =
         "loadingMessage"
     );
 
-
 const chatSection =
     document.getElementById(
         "chatSection"
     );
-
 
 const chatTitle =
     document.getElementById(
         "chatTitle"
     );
 
-
 const courseName =
     document.getElementById(
         "courseName"
     );
-
 
 const usernameDisplay =
     document.getElementById(
         "usernameDisplay"
     );
 
-
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
-
 
 const messages =
     document.getElementById(
         "messages"
     );
 
-
 const messageInput =
     document.getElementById(
         "messageInput"
     );
-
 
 const sendButton =
     document.getElementById(
         "sendButton"
     );
 
-
 const messageError =
     document.getElementById(
         "messageError"
     );
-
 
 const onlineUsers =
     document.getElementById(
         "onlineUsers"
     );
 
-
 const onlineUsersCount =
     document.getElementById(
         "onlineUsersCount"
     );
-
 
 const typingIndicator =
     document.getElementById(
         "typingIndicator"
     );
 
-
 const unreadIndicator =
     document.getElementById(
         "unreadIndicator"
     );
-
 
 const unreadCount =
     document.getElementById(
         "unreadCount"
     );
 
-
 const replyPreview =
     document.getElementById(
         "replyPreview"
     );
-
 
 const replyUsername =
     document.getElementById(
         "replyUsername"
     );
 
-
 const replyText =
     document.getElementById(
         "replyText"
     );
-
 
 const cancelReplyButton =
     document.getElementById(
         "cancelReplyButton"
     );
 
-
 const searchInput =
     document.getElementById(
         "searchInput"
     );
 
-
 const clearSearchButton =
     document.getElementById(
         "clearSearchButton"
     );
-
 
 const searchEmpty =
     document.getElementById(
@@ -140,15 +119,11 @@ const basePageTitle =
 
 
 let currentUserId = null;
-
 let currentUsername = null;
-
 let currentCourseNumber = null;
-
 let currentReplyTo = null;
 
 let typingTimer = null;
-
 let isTyping = false;
 
 let unreadMessageCount = 0;
@@ -171,7 +146,7 @@ const reactionTypes = [
 
 
 // ==========================================
-// INITIALIZE CHAT
+// INITIALIZE
 // ==========================================
 
 async function initializeChat() {
@@ -280,9 +255,7 @@ async function initializeChat() {
 function joinSocketCourse() {
 
     if (!currentUserId) {
-
         return;
-
     }
 
 
@@ -336,7 +309,7 @@ socket.on(
 
 
 // ==========================================
-// UNREAD MESSAGES
+// UNREAD
 // ==========================================
 
 function isChatActive() {
@@ -411,16 +384,6 @@ function addUnreadMessage() {
 
 function clearUnreadMessages() {
 
-    if (
-        unreadMessageCount ===
-        0
-    ) {
-
-        return;
-
-    }
-
-
     unreadMessageCount =
         0;
 
@@ -442,11 +405,7 @@ function goToLatestMessages() {
 
 unreadIndicator.addEventListener(
     "click",
-    () => {
-
-        goToLatestMessages();
-
-    }
+    goToLatestMessages
 );
 
 
@@ -455,8 +414,10 @@ unreadIndicator.addEventListener(
     (event) => {
 
         if (
-            event.key === "Enter" ||
-            event.key === " "
+            event.key ===
+                "Enter" ||
+            event.key ===
+                " "
         ) {
 
             event.preventDefault();
@@ -596,7 +557,8 @@ messageInput.addEventListener(
 
         if (
             messageInput.value
-                .trim() === ""
+                .trim() ===
+            ""
         ) {
 
             stopTyping();
@@ -614,16 +576,12 @@ messageInput.addEventListener(
 
 messageInput.addEventListener(
     "blur",
-    () => {
-
-        stopTyping();
-
-    }
+    stopTyping
 );
 
 
 // ==========================================
-// TYPING USERS REAL-TIME
+// TYPING USERS
 // ==========================================
 
 socket.on(
@@ -800,6 +758,19 @@ function addMessageToChat(
         ?.remove();
 
 
+    const isOwn =
+        String(
+            message.user?._id
+        ) ===
+        String(
+            currentUserId
+        );
+
+
+    // ======================================
+    // MESSAGE ROW
+    // ======================================
+
     const messageElement =
         document.createElement(
             "div"
@@ -807,10 +778,14 @@ function addMessageToChat(
 
 
     messageElement.classList.add(
-        "chat-message",
-        "border-bottom",
-        "pb-3",
-        "mb-3"
+        "chat-message"
+    );
+
+
+    messageElement.classList.add(
+        isOwn
+            ? "chat-message-own"
+            : "chat-message-other"
     );
 
 
@@ -827,9 +802,7 @@ function addMessageToChat(
         "";
 
 
-    // ======================================
-    // DOUBLE CLICK = 👍
-    // ======================================
+    // DOUBLE CLICK = LIKE
 
     messageElement.addEventListener(
         "dblclick",
@@ -837,7 +810,7 @@ function addMessageToChat(
 
             if (
                 event.target.closest(
-                    "button, a, input"
+                    "button, a, input, .dropdown-menu"
                 )
             ) {
 
@@ -856,67 +829,69 @@ function addMessageToChat(
 
 
     // ======================================
-    // HEADER
+    // WRAPPER
     // ======================================
 
-    const messageHeader =
+    const wrapper =
         document.createElement(
             "div"
         );
 
 
-    messageHeader.classList.add(
-        "d-flex",
-        "justify-content-between",
-        "align-items-center",
-        "gap-2",
-        "flex-wrap"
+    wrapper.classList.add(
+        "message-wrapper"
     );
 
 
-    const usernameElement =
-        document.createElement(
-            "strong"
-        );
+    // ======================================
+    // INFO
+    // ======================================
 
-
-    usernameElement.textContent =
-        message.user?.username ||
-        "Nezināms lietotājs";
-
-
-    const rightSide =
+    const info =
         document.createElement(
             "div"
         );
 
 
-    rightSide.classList.add(
-        "d-flex",
-        "align-items-center",
-        "gap-2",
-        "flex-wrap"
+    info.classList.add(
+        "message-info"
     );
 
 
-    // ======================================
-    // TIME
-    // ======================================
-
-    const timeElement =
+    const username =
         document.createElement(
-            "small"
+            "span"
         );
 
 
-    timeElement.classList.add(
-        "text-secondary"
+    username.classList.add(
+        "message-username"
+    );
+
+
+    username.textContent =
+        isOwn
+            ? "Tu"
+            : (
+                message.user?.username ||
+                "Nezināms lietotājs"
+            );
+
+
+    const time =
+        document.createElement(
+            "span"
+        );
+
+
+    time.classList.add(
+        "message-time"
     );
 
 
     if (message.createdAt) {
 
-        timeElement.textContent =
+        time.textContent =
             new Date(
                 message.createdAt
             )
@@ -934,182 +909,38 @@ function addMessageToChat(
     }
 
 
-    rightSide.appendChild(
-        timeElement
+    info.appendChild(
+        username
+    );
+
+
+    info.appendChild(
+        time
+    );
+
+
+    wrapper.appendChild(
+        info
     );
 
 
     // ======================================
-    // REACTION MENU
+    // BUBBLE
     // ======================================
 
-    rightSide.appendChild(
-        createReactionMenu(
-            message._id
-        )
-    );
-
-
-    // ======================================
-    // REPLY
-    // ======================================
-
-    const replyButton =
+    const bubble =
         document.createElement(
-            "button"
+            "div"
         );
 
 
-    replyButton.type =
-        "button";
-
-
-    replyButton.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-outline-secondary"
-    );
-
-
-    replyButton.textContent =
-        "Atbildēt";
-
-
-    replyButton.addEventListener(
-        "click",
-        () => {
-
-            startReply(
-                message._id,
-                messageElement
-                    .dataset
-                    .username,
-                messageElement
-                    .dataset
-                    .messageText
-            );
-
-        }
-    );
-
-
-    rightSide.appendChild(
-        replyButton
+    bubble.classList.add(
+        "message-bubble"
     );
 
 
     // ======================================
-    // OWN MESSAGE
-    // ======================================
-
-    if (
-        message.user &&
-        String(
-            message.user._id
-        ) ===
-        String(
-            currentUserId
-        )
-    ) {
-
-        const editButton =
-            document.createElement(
-                "button"
-            );
-
-
-        editButton.type =
-            "button";
-
-
-        editButton.classList.add(
-            "btn",
-            "btn-sm",
-            "btn-outline-primary"
-        );
-
-
-        editButton.textContent =
-            "Rediģēt";
-
-
-        editButton.addEventListener(
-            "click",
-            () => {
-
-                editMessage(
-                    message._id,
-                    messageElement
-                        .dataset
-                        .messageText
-                );
-
-            }
-        );
-
-
-        rightSide.appendChild(
-            editButton
-        );
-
-
-        const deleteButton =
-            document.createElement(
-                "button"
-            );
-
-
-        deleteButton.type =
-            "button";
-
-
-        deleteButton.classList.add(
-            "btn",
-            "btn-sm",
-            "btn-outline-danger"
-        );
-
-
-        deleteButton.textContent =
-            "Dzēst";
-
-
-        deleteButton.addEventListener(
-            "click",
-            () => {
-
-                deleteMessage(
-                    message._id
-                );
-
-            }
-        );
-
-
-        rightSide.appendChild(
-            deleteButton
-        );
-
-    }
-
-
-    messageHeader.appendChild(
-        usernameElement
-    );
-
-
-    messageHeader.appendChild(
-        rightSide
-    );
-
-
-    messageElement.appendChild(
-        messageHeader
-    );
-
-
-    // ======================================
-    // REPLY MESSAGE
+    // REPLY INSIDE BUBBLE
     // ======================================
 
     if (message.replyTo) {
@@ -1121,12 +952,7 @@ function addMessageToChat(
 
 
         replyElement.classList.add(
-            "reply-message",
-            "border-start",
-            "border-3",
-            "ps-2",
-            "my-2",
-            "text-secondary"
+            "reply-message"
         );
 
 
@@ -1141,7 +967,7 @@ function addMessageToChat(
 
 
         replyUser.classList.add(
-            "fw-bold",
+            "fw-semibold",
             "d-block"
         );
 
@@ -1177,7 +1003,7 @@ function addMessageToChat(
         );
 
 
-        messageElement.appendChild(
+        bubble.appendChild(
             replyElement
         );
 
@@ -1185,7 +1011,7 @@ function addMessageToChat(
 
 
     // ======================================
-    // MESSAGE TEXT
+    // TEXT
     // ======================================
 
     const textElement =
@@ -1195,7 +1021,6 @@ function addMessageToChat(
 
 
     textElement.classList.add(
-        "mb-0",
         "message-text"
     );
 
@@ -1222,8 +1047,13 @@ function addMessageToChat(
     }
 
 
-    messageElement.appendChild(
+    bubble.appendChild(
         textElement
+    );
+
+
+    wrapper.appendChild(
+        bubble
     );
 
 
@@ -1238,16 +1068,53 @@ function addMessageToChat(
 
 
     reactionsContainer.classList.add(
-        "reactions-container",
-        "d-flex",
-        "gap-2",
-        "flex-wrap",
-        "mt-2"
+        "reactions-container"
+    );
+
+
+    wrapper.appendChild(
+        reactionsContainer
+    );
+
+
+    // ======================================
+    // ACTIONS
+    // ======================================
+
+    const actions =
+        document.createElement(
+            "div"
+        );
+
+
+    actions.classList.add(
+        "message-actions"
+    );
+
+
+    actions.appendChild(
+        createReactionMenu(
+            message._id
+        )
+    );
+
+
+    actions.appendChild(
+        createActionMenu(
+            message,
+            messageElement,
+            isOwn
+        )
+    );
+
+
+    wrapper.appendChild(
+        actions
     );
 
 
     messageElement.appendChild(
-        reactionsContainer
+        wrapper
     );
 
 
@@ -1258,8 +1125,269 @@ function addMessageToChat(
 
     renderReactions(
         messageElement,
-        message.reactions || []
+        message.reactions ||
+        []
     );
+
+}
+
+
+// ==========================================
+// ACTION MENU
+// ==========================================
+
+function createActionMenu(
+    message,
+    messageElement,
+    isOwn
+) {
+
+    const dropdown =
+        document.createElement(
+            "div"
+        );
+
+
+    dropdown.classList.add(
+        "dropdown"
+    );
+
+
+    const button =
+        document.createElement(
+            "button"
+        );
+
+
+    button.type =
+        "button";
+
+
+    button.classList.add(
+        "btn",
+        "btn-sm",
+        "btn-light",
+        "message-action-button"
+    );
+
+
+    button.setAttribute(
+        "data-bs-toggle",
+        "dropdown"
+    );
+
+
+    button.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+
+    button.textContent =
+        "⋯";
+
+
+    const menu =
+        document.createElement(
+            "ul"
+        );
+
+
+    menu.classList.add(
+        "dropdown-menu",
+        "message-menu"
+    );
+
+
+    // ======================================
+    // REPLY
+    // ======================================
+
+    const replyItem =
+        document.createElement(
+            "li"
+        );
+
+
+    const replyButton =
+        document.createElement(
+            "button"
+        );
+
+
+    replyButton.type =
+        "button";
+
+
+    replyButton.classList.add(
+        "dropdown-item"
+    );
+
+
+    replyButton.textContent =
+        "↩ Atbildēt";
+
+
+    replyButton.addEventListener(
+        "click",
+        () => {
+
+            startReply(
+                message._id,
+                messageElement
+                    .dataset
+                    .username,
+                messageElement
+                    .dataset
+                    .messageText
+            );
+
+        }
+    );
+
+
+    replyItem.appendChild(
+        replyButton
+    );
+
+
+    menu.appendChild(
+        replyItem
+    );
+
+
+    // ======================================
+    // OWN MESSAGE
+    // ======================================
+
+    if (isOwn) {
+
+        const editItem =
+            document.createElement(
+                "li"
+            );
+
+
+        const editButton =
+            document.createElement(
+                "button"
+            );
+
+
+        editButton.type =
+            "button";
+
+
+        editButton.classList.add(
+            "dropdown-item"
+        );
+
+
+        editButton.textContent =
+            "✎ Rediģēt";
+
+
+        editButton.addEventListener(
+            "click",
+            () => {
+
+                editMessage(
+                    message._id,
+                    messageElement
+                        .dataset
+                        .messageText
+                );
+
+            }
+        );
+
+
+        editItem.appendChild(
+            editButton
+        );
+
+
+        menu.appendChild(
+            editItem
+        );
+
+
+        const divider =
+            document.createElement(
+                "li"
+            );
+
+
+        divider.innerHTML =
+            `<hr class="dropdown-divider">`;
+
+
+        menu.appendChild(
+            divider
+        );
+
+
+        const deleteItem =
+            document.createElement(
+                "li"
+            );
+
+
+        const deleteButton =
+            document.createElement(
+                "button"
+            );
+
+
+        deleteButton.type =
+            "button";
+
+
+        deleteButton.classList.add(
+            "dropdown-item",
+            "text-danger"
+        );
+
+
+        deleteButton.textContent =
+            "Dzēst";
+
+
+        deleteButton.addEventListener(
+            "click",
+            () => {
+
+                deleteMessage(
+                    message._id
+                );
+
+            }
+        );
+
+
+        deleteItem.appendChild(
+            deleteButton
+        );
+
+
+        menu.appendChild(
+            deleteItem
+        );
+
+    }
+
+
+    dropdown.appendChild(
+        button
+    );
+
+
+    dropdown.appendChild(
+        menu
+    );
+
+
+    return dropdown;
 
 }
 
@@ -1296,8 +1424,9 @@ function createReactionMenu(
     menuButton.classList.add(
         "btn",
         "btn-sm",
-        "btn-outline-secondary",
-        "dropdown-toggle"
+        "btn-light",
+        "message-action-button",
+        "reaction-picker-button"
     );
 
 
@@ -1325,6 +1454,7 @@ function createReactionMenu(
 
     menu.classList.add(
         "dropdown-menu",
+        "reaction-menu",
         "p-2"
     );
 
@@ -1356,28 +1486,28 @@ function createReactionMenu(
             );
 
 
-            const button =
+            const reactionButton =
                 document.createElement(
                     "button"
                 );
 
 
-            button.type =
+            reactionButton.type =
                 "button";
 
 
-            button.classList.add(
+            reactionButton.classList.add(
                 "btn",
                 "btn-light",
                 "w-100"
             );
 
 
-            button.textContent =
+            reactionButton.textContent =
                 reaction;
 
 
-            button.addEventListener(
+            reactionButton.addEventListener(
                 "click",
                 () => {
 
@@ -1391,7 +1521,7 @@ function createReactionMenu(
 
 
             column.appendChild(
-                button
+                reactionButton
             );
 
 
@@ -1514,14 +1644,15 @@ function renderReactions(
 
             button.classList.add(
                 "btn",
-                "btn-sm"
+                "btn-sm",
+                "reaction-badge"
             );
 
 
             button.classList.add(
                 currentUserReacted
                     ? "btn-primary"
-                    : "btn-outline-secondary"
+                    : "btn-light"
             );
 
 
@@ -1537,6 +1668,7 @@ function renderReactions(
                         messageElement
                             .dataset
                             .messageId,
+
                         reactionType
                     );
 
@@ -1579,8 +1711,7 @@ async function toggleReaction(
 
                     body:
                         JSON.stringify({
-                            reaction:
-                                reaction
+                            reaction
                         })
                 }
             );
@@ -1792,7 +1923,7 @@ cancelReplyButton.addEventListener(
 
 
 // ==========================================
-// EDITED LABEL
+// EDITED
 // ==========================================
 
 function addEditedLabel(
@@ -1831,7 +1962,7 @@ function addEditedLabel(
 
 
 // ==========================================
-// EDIT MESSAGE
+// EDIT
 // ==========================================
 
 async function editMessage(
@@ -1847,7 +1978,8 @@ async function editMessage(
 
 
     if (
-        newText === null
+        newText ===
+        null
     ) {
 
         return;
@@ -1864,6 +1996,7 @@ async function editMessage(
         showMessageError(
             "Ziņa nevar būt tukša."
         );
+
 
         return;
 
@@ -1934,7 +2067,7 @@ async function editMessage(
 
 
 // ==========================================
-// DELETE MESSAGE
+// DELETE
 // ==========================================
 
 async function deleteMessage(
@@ -1994,7 +2127,7 @@ async function deleteMessage(
 
 
 // ==========================================
-// NEW MESSAGE REAL-TIME
+// NEW MESSAGE
 // ==========================================
 
 socket.on(
@@ -2005,7 +2138,7 @@ socket.on(
             isMessagesNearBottom();
 
 
-        const isOwnMessage =
+        const isOwn =
             String(
                 message.user?._id
             ) ===
@@ -2022,13 +2155,11 @@ socket.on(
         applyMessageSearch();
 
 
-        if (isOwnMessage) {
+        if (isOwn) {
 
             scrollMessagesToBottom();
 
-
             clearUnreadMessages();
-
 
             return;
 
@@ -2041,7 +2172,6 @@ socket.on(
         ) {
 
             addUnreadMessage();
-
 
             return;
 
@@ -2135,7 +2265,7 @@ socket.on(
 
 
 // ==========================================
-// REACTION REAL-TIME
+// REACTIONS REAL-TIME
 // ==========================================
 
 socket.on(
@@ -2152,7 +2282,8 @@ socket.on(
 
             renderReactions(
                 messageElement,
-                data.reactions || []
+                data.reactions ||
+                []
             );
 
         }
@@ -2223,7 +2354,7 @@ socket.on(
 
 
 // ==========================================
-// ONLINE USERS
+// ONLINE
 // ==========================================
 
 socket.on(
@@ -2243,11 +2374,14 @@ socket.on(
             0
         ) {
 
-            onlineUsers.innerHTML = `
-                <div class="list-group-item text-secondary">
+            onlineUsers.innerHTML =
+                `
+                <div
+                    class="list-group-item text-secondary"
+                >
                     Neviens nav tiešsaistē.
                 </div>
-            `;
+                `;
 
 
             return;
@@ -2352,7 +2486,7 @@ socket.on(
 
 
 // ==========================================
-// SEND MESSAGE
+// SEND
 // ==========================================
 
 sendButton.addEventListener(
@@ -2472,7 +2606,7 @@ async function sendMessage() {
 
 
 // ==========================================
-// ENTER = SEND
+// ENTER
 // ==========================================
 
 messageInput.addEventListener(
@@ -2480,7 +2614,8 @@ messageInput.addEventListener(
     (event) => {
 
         if (
-            event.key === "Enter" &&
+            event.key ===
+                "Enter" &&
             !event.shiftKey
         ) {
 
@@ -2564,14 +2699,15 @@ logoutButton.addEventListener(
 
 function showEmptyMessages() {
 
-    messages.innerHTML = `
+    messages.innerHTML =
+        `
         <p
             id="emptyMessages"
-            class="text-secondary mb-0"
+            class="text-secondary text-center my-4"
         >
             Ziņu vēl nav.
         </p>
-    `;
+        `;
 
 }
 
