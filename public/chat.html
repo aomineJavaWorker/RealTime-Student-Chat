@@ -361,7 +361,6 @@
                     class="card shadow-sm sidebar-card"
                 >
 
-
                     <div
                         class="card-header bg-body p-0"
                     >
@@ -447,7 +446,6 @@
                         class="tab-content sidebar-content"
                     >
 
-
                         <!-- CONVERSATIONS -->
 
                         <div
@@ -524,7 +522,6 @@
         <div
             class="modal-content"
         >
-
 
             <div
                 class="modal-header"
@@ -629,6 +626,93 @@
                 </div>
 
             </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================
+     PRIVATE MESSAGE TOAST
+     ====================================== -->
+
+<div
+    class="toast-container position-fixed top-0 end-0 p-3 private-toast-container"
+>
+
+    <div
+        id="privateMessageToast"
+        class="toast shadow"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+    >
+
+        <div
+            class="toast-header"
+        >
+
+            <div
+                id="privateToastAvatar"
+                class="user-avatar private-toast-avatar me-2"
+            >
+                ?
+            </div>
+
+
+            <strong
+                class="me-auto"
+            >
+                Jauna privāta ziņa
+            </strong>
+
+
+            <small
+                id="privateToastTime"
+                class="text-secondary"
+            >
+                tagad
+            </small>
+
+
+            <button
+                type="button"
+                class="btn-close ms-2 mb-1"
+                data-bs-dismiss="toast"
+                aria-label="Aizvērt"
+            >
+            </button>
+
+        </div>
+
+
+        <div
+            class="toast-body"
+        >
+
+            <strong
+                id="privateToastUsername"
+                class="d-block mb-1"
+            >
+            </strong>
+
+
+            <div
+                id="privateToastText"
+                class="private-toast-text text-secondary mb-2"
+            >
+            </div>
+
+
+            <button
+                id="privateToastOpenButton"
+                type="button"
+                class="btn btn-primary btn-sm"
+            >
+                Atvērt saraksti
+            </button>
 
         </div>
 

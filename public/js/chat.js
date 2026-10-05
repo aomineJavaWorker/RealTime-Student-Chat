@@ -1,7 +1,6 @@
-const socket =
-    io({
-        autoConnect: false
-    });
+const socket = io({
+    autoConnect: false
+});
 
 
 // ==========================================
@@ -13,144 +12,120 @@ const loadingMessage =
         "loadingMessage"
     );
 
-
 const chatSection =
     document.getElementById(
         "chatSection"
     );
-
 
 const chatTitle =
     document.getElementById(
         "chatTitle"
     );
 
-
 const courseName =
     document.getElementById(
         "courseName"
     );
-
 
 const currentUserAvatar =
     document.getElementById(
         "currentUserAvatar"
     );
 
-
 const usernameDisplay =
     document.getElementById(
         "usernameDisplay"
     );
-
 
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
 
-
 const messages =
     document.getElementById(
         "messages"
     );
-
 
 const messageInput =
     document.getElementById(
         "messageInput"
     );
 
-
 const sendButton =
     document.getElementById(
         "sendButton"
     );
-
 
 const messageError =
     document.getElementById(
         "messageError"
     );
 
-
 const conversationList =
     document.getElementById(
         "conversationList"
     );
-
 
 const courseUsers =
     document.getElementById(
         "courseUsers"
     );
 
-
 const onlineUsersCount =
     document.getElementById(
         "onlineUsersCount"
     );
-
 
 const participantsTabButton =
     document.getElementById(
         "participantsTabButton"
     );
 
-
 const typingIndicator =
     document.getElementById(
         "typingIndicator"
     );
-
 
 const unreadIndicator =
     document.getElementById(
         "unreadIndicator"
     );
 
-
 const unreadCount =
     document.getElementById(
         "unreadCount"
     );
-
 
 const replyPreview =
     document.getElementById(
         "replyPreview"
     );
 
-
 const replyUsername =
     document.getElementById(
         "replyUsername"
     );
-
 
 const replyText =
     document.getElementById(
         "replyText"
     );
 
-
 const cancelReplyButton =
     document.getElementById(
         "cancelReplyButton"
     );
-
 
 const searchInput =
     document.getElementById(
         "searchInput"
     );
 
-
 const clearSearchButton =
     document.getElementById(
         "clearSearchButton"
     );
-
 
 const searchEmpty =
     document.getElementById(
@@ -159,7 +134,7 @@ const searchEmpty =
 
 
 // ==========================================
-// PRIVATE CHAT ELEMENTS
+// PRIVATE CHAT
 // ==========================================
 
 const privateMessageModalElement =
@@ -167,42 +142,35 @@ const privateMessageModalElement =
         "privateMessageModal"
     );
 
-
 const privateChatAvatar =
     document.getElementById(
         "privateChatAvatar"
     );
-
 
 const privateChatUsername =
     document.getElementById(
         "privateChatUsername"
     );
 
-
 const privateChatStatus =
     document.getElementById(
         "privateChatStatus"
     );
-
 
 const privateMessages =
     document.getElementById(
         "privateMessages"
     );
 
-
 const privateMessageInput =
     document.getElementById(
         "privateMessageInput"
     );
 
-
 const privateSendButton =
     document.getElementById(
         "privateSendButton"
     );
-
 
 const privateMessageError =
     document.getElementById(
@@ -213,6 +181,51 @@ const privateMessageError =
 const privateMessageModal =
     new bootstrap.Modal(
         privateMessageModalElement
+    );
+
+
+// ==========================================
+// PRIVATE TOAST
+// ==========================================
+
+const privateMessageToastElement =
+    document.getElementById(
+        "privateMessageToast"
+    );
+
+const privateToastAvatar =
+    document.getElementById(
+        "privateToastAvatar"
+    );
+
+const privateToastUsername =
+    document.getElementById(
+        "privateToastUsername"
+    );
+
+const privateToastText =
+    document.getElementById(
+        "privateToastText"
+    );
+
+const privateToastTime =
+    document.getElementById(
+        "privateToastTime"
+    );
+
+const privateToastOpenButton =
+    document.getElementById(
+        "privateToastOpenButton"
+    );
+
+
+const privateMessageToast =
+    new bootstrap.Toast(
+        privateMessageToastElement,
+        {
+            autohide: true,
+            delay: 6000
+        }
     );
 
 
@@ -240,47 +253,31 @@ const reactionTypes = [
 // STATE
 // ==========================================
 
-let currentUserId =
-    null;
+let currentUserId = null;
 
+let currentUsername = null;
 
-let currentUsername =
-    null;
+let currentCourseNumber = null;
 
+let currentReplyTo = null;
 
-let currentCourseNumber =
-    null;
+let typingTimer = null;
 
+let isTyping = false;
 
-let currentReplyTo =
-    null;
+let unreadMessageCount = 0;
 
+let courseParticipants = [];
 
-let typingTimer =
-    null;
-
-
-let isTyping =
-    false;
-
-
-let unreadMessageCount =
-    0;
-
-
-let courseParticipants =
-    [];
-
-
-let privateConversations =
-    [];
-
+let privateConversations = [];
 
 let onlineUserIds =
     new Set();
 
-
 let currentPrivateUser =
+    null;
+
+let toastPrivateUser =
     null;
 
 
@@ -307,9 +304,7 @@ function getEntityId(value) {
     }
 
 
-    return String(
-        value
-    );
+    return String(value);
 
 }
 
@@ -340,7 +335,8 @@ function createAvatar(
 
 
     avatar.className =
-        `user-avatar ${className}`.trim();
+        `user-avatar ${className}`
+            .trim();
 
 
     avatar.textContent =
@@ -350,8 +346,7 @@ function createAvatar(
 
 
     avatar.title =
-        username ||
-        "";
+        username || "";
 
 
     return avatar;
@@ -369,9 +364,7 @@ function formatConversationTime(
 
 
     const date =
-        new Date(
-            value
-        );
+        new Date(value);
 
 
     const now =
@@ -407,6 +400,17 @@ function formatConversationTime(
                 "2-digit"
         }
     );
+
+}
+
+
+function isPrivateModalOpen() {
+
+    return privateMessageModalElement
+        .classList
+        .contains(
+            "show"
+        );
 
 }
 
@@ -551,9 +555,7 @@ socket.on(
     "connect",
     () => {
 
-        isTyping =
-            false;
-
+        isTyping = false;
 
         joinSocketCourse();
 
@@ -565,9 +567,7 @@ socket.on(
     "disconnect",
     () => {
 
-        isTyping =
-            false;
-
+        isTyping = false;
 
         clearTimeout(
             typingTimer
@@ -633,7 +633,6 @@ async function loadCourseUsers() {
         courseParticipants =
             data.map(
                 (user) => ({
-
                     _id:
                         String(
                             user._id
@@ -641,7 +640,6 @@ async function loadCourseUsers() {
 
                     username:
                         user.username
-
                 })
             );
 
@@ -708,9 +706,7 @@ async function loadConversations() {
         privateConversations =
             data.map(
                 (conversation) => ({
-
                     user: {
-
                         _id:
                             String(
                                 conversation
@@ -722,13 +718,11 @@ async function loadConversations() {
                             conversation
                                 .user
                                 .username
-
                     },
 
-
                     lastMessage:
-                        conversation.lastMessage
-
+                        conversation
+                            .lastMessage
                 })
             );
 
@@ -1306,6 +1300,9 @@ async function openPrivateChat(
         user;
 
 
+    privateMessageToast.hide();
+
+
     privateChatAvatar.textContent =
         getInitial(
             user.username
@@ -1665,6 +1662,95 @@ function addPrivateMessageToChat(
 
 
 // ==========================================
+// PRIVATE TOAST
+// ==========================================
+
+function showPrivateMessageToast(
+    message,
+    sender
+) {
+
+    toastPrivateUser =
+        sender;
+
+
+    privateToastAvatar.textContent =
+        getInitial(
+            sender.username
+        );
+
+
+    privateToastUsername.textContent =
+        sender.username;
+
+
+    privateToastText.textContent =
+        message.text;
+
+
+    privateToastTime.textContent =
+        message.createdAt
+            ? new Date(
+                message.createdAt
+            )
+                .toLocaleTimeString(
+                    "lv-LV",
+                    {
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
+                    }
+                )
+            : "tagad";
+
+
+    privateMessageToast.show();
+
+}
+
+
+privateToastOpenButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !toastPrivateUser
+        ) {
+
+            return;
+
+        }
+
+
+        const user =
+            toastPrivateUser;
+
+
+        privateMessageToast.hide();
+
+
+        openPrivateChat(
+            user
+        );
+
+    }
+);
+
+
+privateMessageToastElement.addEventListener(
+    "hidden.bs.toast",
+    () => {
+
+        toastPrivateUser =
+            null;
+
+    }
+);
+
+
+// ==========================================
 // SEND PRIVATE MESSAGE
 // ==========================================
 
@@ -1717,8 +1803,7 @@ async function sendPrivateMessage() {
 
                     body:
                         JSON.stringify({
-                            text:
-                                text
+                            text
                         })
                 }
             );
@@ -1879,9 +1964,13 @@ socket.on(
         }
 
 
-        const partnerId =
+        const isOwnMessage =
             senderId ===
-                currentUserId
+            currentUserId;
+
+
+        const partnerId =
+            isOwnMessage
                 ? recipientId
                 : senderId;
 
@@ -1898,6 +1987,47 @@ socket.on(
 
 
             scrollPrivateMessagesToBottom();
+
+        }
+
+
+        /*
+         * Toast tiek parādīts tikai tad,
+         * ja ziņu nosūtīja cits lietotājs
+         * un sarakste ar viņu pašlaik
+         * nav atvērta.
+         */
+
+        if (!isOwnMessage) {
+
+            const sameConversationOpen =
+                isPrivateModalOpen() &&
+                currentPrivateUser &&
+                currentPrivateUser._id ===
+                    senderId;
+
+
+            if (
+                !sameConversationOpen
+            ) {
+
+                const sender = {
+                    _id:
+                        senderId,
+
+                    username:
+                        message.sender
+                            ?.username ||
+                        "Lietotājs"
+                };
+
+
+                showPrivateMessageToast(
+                    message,
+                    sender
+                );
+
+            }
 
         }
 
@@ -2107,8 +2237,7 @@ function startTyping() {
         );
 
 
-        isTyping =
-            true;
+        isTyping = true;
 
     }
 
@@ -2146,8 +2275,7 @@ function stopTyping() {
     }
 
 
-    isTyping =
-        false;
+    isTyping = false;
 
 }
 
@@ -2438,8 +2566,6 @@ function addMessageToChat(
         "message-wrapper";
 
 
-    // INFO
-
     const info =
         document.createElement(
             "div"
@@ -2513,8 +2639,6 @@ function addMessageToChat(
     );
 
 
-    // BUBBLE
-
     const bubble =
         document.createElement(
             "div"
@@ -2524,8 +2648,6 @@ function addMessageToChat(
     bubble.className =
         "message-bubble";
 
-
-    // REPLY
 
     if (
         message.replyTo
@@ -2706,8 +2828,7 @@ function addMessageToChat(
 
     renderReactions(
         messageElement,
-        message.reactions ||
-        []
+        message.reactions || []
     );
 
 }
@@ -3103,9 +3224,7 @@ function renderReactions(
 
 
     if (!container) {
-
         return;
-
     }
 
 
@@ -3279,8 +3398,7 @@ function applyMessageSearch() {
         );
 
 
-    let visibleMessages =
-        0;
+    let visibleMessages = 0;
 
 
     messageElements.forEach(
@@ -3316,9 +3434,7 @@ function applyMessageSearch() {
 
 
             if (matches) {
-
                 visibleMessages++;
-
             }
 
         }
@@ -3373,11 +3489,8 @@ function startReply(
         id:
             messageId,
 
-        username:
-            username,
-
-        text:
-            text
+        username,
+        text
     };
 
 
@@ -3401,8 +3514,7 @@ function startReply(
 
 function cancelReply() {
 
-    currentReplyTo =
-        null;
+    currentReplyTo = null;
 
 
     replyUsername.textContent =
@@ -3463,7 +3575,7 @@ function addEditedLabel(
 
 
 // ==========================================
-// EDIT MESSAGE
+// EDIT
 // ==========================================
 
 async function editMessage(
@@ -3479,8 +3591,7 @@ async function editMessage(
 
 
     if (
-        newText ===
-        null
+        newText === null
     ) {
 
         return;
@@ -3568,7 +3679,7 @@ async function editMessage(
 
 
 // ==========================================
-// DELETE MESSAGE
+// DELETE
 // ==========================================
 
 async function deleteMessage(
@@ -3658,9 +3769,7 @@ socket.on(
 
             scrollMessagesToBottom();
 
-
             clearUnreadMessages();
-
 
             return;
 
@@ -3673,7 +3782,6 @@ socket.on(
         ) {
 
             addUnreadMessage();
-
 
             return;
 
@@ -3776,8 +3884,7 @@ socket.on(
 
             renderReactions(
                 messageElement,
-                data.reactions ||
-                []
+                data.reactions || []
             );
 
         }
@@ -3844,7 +3951,7 @@ socket.on(
 
 
 // ==========================================
-// SEND GENERAL MESSAGE
+// SEND GENERAL
 // ==========================================
 
 sendButton.addEventListener(
@@ -3898,8 +4005,7 @@ async function sendMessage() {
 
                     body:
                         JSON.stringify({
-                            text:
-                                text,
+                            text,
 
                             replyToId:
                                 currentReplyTo?.id ||
