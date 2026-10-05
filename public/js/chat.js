@@ -32,6 +32,12 @@ const courseName =
     );
 
 
+const currentUserAvatar =
+    document.getElementById(
+        "currentUserAvatar"
+    );
+
+
 const usernameDisplay =
     document.getElementById(
         "usernameDisplay"
@@ -83,12 +89,6 @@ const courseUsers =
 const onlineUsersCount =
     document.getElementById(
         "onlineUsersCount"
-    );
-
-
-const conversationsTabButton =
-    document.getElementById(
-        "conversationsTabButton"
     );
 
 
@@ -301,8 +301,7 @@ function getEntityId(value) {
     ) {
 
         return String(
-            value._id ||
-            ""
+            value._id || ""
         );
 
     }
@@ -320,13 +319,42 @@ function getInitial(
 ) {
 
     return String(
-        username ||
-        "?"
+        username || "?"
     )
         .trim()
         .charAt(0)
-        .toUpperCase() ||
-        "?";
+        .toUpperCase() || "?";
+
+}
+
+
+function createAvatar(
+    username,
+    className = ""
+) {
+
+    const avatar =
+        document.createElement(
+            "div"
+        );
+
+
+    avatar.className =
+        `user-avatar ${className}`.trim();
+
+
+    avatar.textContent =
+        getInitial(
+            username
+        );
+
+
+    avatar.title =
+        username ||
+        "";
+
+
+    return avatar;
 
 }
 
@@ -350,12 +378,10 @@ function formatConversationTime(
         new Date();
 
 
-    const sameDay =
+    if (
         date.toDateString() ===
-        now.toDateString();
-
-
-    if (sameDay) {
+        now.toDateString()
+    ) {
 
         return date.toLocaleTimeString(
             "lv-LV",
@@ -386,7 +412,7 @@ function formatConversationTime(
 
 
 // ==========================================
-// INITIALIZE CHAT
+// INITIALIZE
 // ==========================================
 
 async function initializeChat() {
@@ -430,6 +456,16 @@ async function initializeChat() {
             Number(
                 data.user.courseNumber
             );
+
+
+        currentUserAvatar.textContent =
+            getInitial(
+                currentUsername
+            );
+
+
+        currentUserAvatar.title =
+            currentUsername;
 
 
         usernameDisplay.textContent =
@@ -832,25 +868,14 @@ function renderConversations() {
                 "list-group-item list-group-item-action conversation-item";
 
 
-            // AVATAR
-
             const avatar =
-                document.createElement(
-                    "div"
+                createAvatar(
+                    user.username,
+                    isOnline
+                        ? "avatar-online"
+                        : ""
                 );
 
-
-            avatar.className =
-                `user-avatar${isOnline ? " avatar-online" : ""}`;
-
-
-            avatar.textContent =
-                getInitial(
-                    user.username
-                );
-
-
-            // MAIN
 
             const main =
                 document.createElement(
@@ -928,9 +953,7 @@ function renderConversations() {
                 conversation
                     .lastMessage
                     ?.isOwn
-
                     ? "Tu: "
-
                     : "";
 
 
@@ -981,7 +1004,7 @@ function renderConversations() {
 
 
 // ==========================================
-// RENDER COURSE USERS
+// PARTICIPANTS
 // ==========================================
 
 function renderCourseUsers() {
@@ -1099,18 +1122,11 @@ function renderCourseUsers() {
 
 
             const avatar =
-                document.createElement(
-                    "div"
-                );
-
-
-            avatar.className =
-                `user-avatar${isOnline ? " avatar-online" : ""}`;
-
-
-            avatar.textContent =
-                getInitial(
-                    user.username
+                createAvatar(
+                    user.username,
+                    isOnline
+                        ? "avatar-online"
+                        : ""
                 );
 
 
@@ -1279,7 +1295,7 @@ socket.on(
 
 
 // ==========================================
-// OPEN PRIVATE CHAT
+// PRIVATE CHAT
 // ==========================================
 
 async function openPrivateChat(
@@ -1294,6 +1310,10 @@ async function openPrivateChat(
         getInitial(
             user.username
         );
+
+
+    privateChatAvatar.title =
+        user.username;
 
 
     privateChatUsername.textContent =
@@ -1462,7 +1482,7 @@ async function loadPrivateMessages(
 
 
 // ==========================================
-// PRIVATE MESSAGE UI
+// ADD PRIVATE MESSAGE
 // ==========================================
 
 function addPrivateMessageToChat(
@@ -1498,6 +1518,18 @@ function addPrivateMessageToChat(
         currentUserId;
 
 
+    const senderUsername =
+        isOwn
+            ? currentUsername
+            : (
+                message.sender
+                    ?.username ||
+                currentPrivateUser
+                    ?.username ||
+                "?"
+            );
+
+
     const row =
         document.createElement(
             "div"
@@ -1510,6 +1542,13 @@ function addPrivateMessageToChat(
 
     row.dataset.privateMessageId =
         message._id;
+
+
+    const avatar =
+        createAvatar(
+            senderUsername,
+            "user-avatar-private"
+        );
 
 
     const wrapper =
@@ -1593,9 +1632,29 @@ function addPrivateMessageToChat(
     );
 
 
-    row.appendChild(
-        wrapper
-    );
+    if (isOwn) {
+
+        row.appendChild(
+            wrapper
+        );
+
+
+        row.appendChild(
+            avatar
+        );
+
+    } else {
+
+        row.appendChild(
+            avatar
+        );
+
+
+        row.appendChild(
+            wrapper
+        );
+
+    }
 
 
     privateMessages.appendChild(
@@ -1823,9 +1882,7 @@ socket.on(
         const partnerId =
             senderId ===
                 currentUserId
-
                 ? recipientId
-
                 : senderId;
 
 
@@ -2307,6 +2364,16 @@ function addMessageToChat(
         currentUserId;
 
 
+    const messageUsername =
+        isOwn
+            ? currentUsername
+            : (
+                message.user
+                    ?.username ||
+                "Nezināms lietotājs"
+            );
+
+
     const messageElement =
         document.createElement(
             "div"
@@ -2354,6 +2421,13 @@ function addMessageToChat(
     );
 
 
+    const avatar =
+        createAvatar(
+            messageUsername,
+            "user-avatar-message"
+        );
+
+
     const wrapper =
         document.createElement(
             "div"
@@ -2364,9 +2438,7 @@ function addMessageToChat(
         "message-wrapper";
 
 
-    // ======================================
     // INFO
-    // ======================================
 
     const info =
         document.createElement(
@@ -2390,14 +2462,8 @@ function addMessageToChat(
 
     username.textContent =
         isOwn
-
             ? "Tu"
-
-            : (
-                message.user
-                    ?.username ||
-                "Nezināms lietotājs"
-            );
+            : messageUsername;
 
 
     const time =
@@ -2447,9 +2513,7 @@ function addMessageToChat(
     );
 
 
-    // ======================================
     // BUBBLE
-    // ======================================
 
     const bubble =
         document.createElement(
@@ -2461,9 +2525,7 @@ function addMessageToChat(
         "message-bubble";
 
 
-    // ======================================
     // REPLY
-    // ======================================
 
     if (
         message.replyTo
@@ -2531,10 +2593,6 @@ function addMessageToChat(
     }
 
 
-    // ======================================
-    // TEXT
-    // ======================================
-
     const textElement =
         document.createElement(
             "p"
@@ -2570,10 +2628,6 @@ function addMessageToChat(
     );
 
 
-    // ======================================
-    // REACTIONS
-    // ======================================
-
     const reactionsContainer =
         document.createElement(
             "div"
@@ -2588,10 +2642,6 @@ function addMessageToChat(
         reactionsContainer
     );
 
-
-    // ======================================
-    // ACTIONS
-    // ======================================
 
     const actions =
         document.createElement(
@@ -2624,9 +2674,29 @@ function addMessageToChat(
     );
 
 
-    messageElement.appendChild(
-        wrapper
-    );
+    if (isOwn) {
+
+        messageElement.appendChild(
+            wrapper
+        );
+
+
+        messageElement.appendChild(
+            avatar
+        );
+
+    } else {
+
+        messageElement.appendChild(
+            avatar
+        );
+
+
+        messageElement.appendChild(
+            wrapper
+        );
+
+    }
 
 
     messages.appendChild(
@@ -2697,8 +2767,6 @@ function createActionMenu(
         "dropdown-menu message-menu";
 
 
-    // REPLY
-
     const replyItem =
         document.createElement(
             "li"
@@ -2728,17 +2796,13 @@ function createActionMenu(
         () => {
 
             startReply(
-
                 message._id,
-
                 messageElement
                     .dataset
                     .username,
-
                 messageElement
                     .dataset
                     .messageText
-
             );
 
         }
@@ -2754,8 +2818,6 @@ function createActionMenu(
         replyItem
     );
 
-
-    // OWN MESSAGE
 
     if (isOwn) {
 
@@ -2788,13 +2850,10 @@ function createActionMenu(
             () => {
 
                 editMessage(
-
                     message._id,
-
                     messageElement
                         .dataset
                         .messageText
-
                 );
 
             }
@@ -3059,13 +3118,11 @@ function renderReactions(
 
             const reactionUsers =
                 reactions
-
                     .filter(
                         (reaction) =>
                             reaction.type ===
                             reactionType
                     )
-
                     .map(
                         (reaction) =>
                             getEntityId(
@@ -3113,13 +3170,10 @@ function renderReactions(
                 () => {
 
                     toggleReaction(
-
                         messageElement
                             .dataset
                             .messageId,
-
                         reactionType
-
                     );
 
                 }
@@ -3161,8 +3215,7 @@ async function toggleReaction(
 
                     body:
                         JSON.stringify({
-                            reaction:
-                                reaction
+                            reaction
                         })
                 }
             );
@@ -3317,7 +3370,6 @@ function startReply(
 ) {
 
     currentReplyTo = {
-
         id:
             messageId,
 
@@ -3326,7 +3378,6 @@ function startReply(
 
         text:
             text
-
     };
 
 
@@ -3577,7 +3628,7 @@ async function deleteMessage(
 
 
 // ==========================================
-// NEW MESSAGE
+// GENERAL SOCKET EVENTS
 // ==========================================
 
 socket.on(
@@ -3634,10 +3685,6 @@ socket.on(
     }
 );
 
-
-// ==========================================
-// MESSAGE UPDATED
-// ==========================================
 
 socket.on(
     "messageUpdated",
@@ -3715,10 +3762,6 @@ socket.on(
 );
 
 
-// ==========================================
-// REACTION UPDATED
-// ==========================================
-
 socket.on(
     "messageReactionUpdated",
     (data) => {
@@ -3742,10 +3785,6 @@ socket.on(
     }
 );
 
-
-// ==========================================
-// MESSAGE DELETED
-// ==========================================
 
 socket.on(
     "messageDeleted",
@@ -3859,14 +3898,12 @@ async function sendMessage() {
 
                     body:
                         JSON.stringify({
-
                             text:
                                 text,
 
                             replyToId:
                                 currentReplyTo?.id ||
                                 null
-
                         })
                 }
             );
