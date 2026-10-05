@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="lv">
 
 <head>
@@ -10,12 +11,16 @@
         content="width=device-width, initial-scale=1"
     >
 
-    <title>Čats | Student Chat</title>
+    <title>
+        Čats | Student Chat
+    </title>
+
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
+
 
     <link
         rel="stylesheet"
@@ -28,9 +33,13 @@
 <body>
 
 
-<nav class="navbar navbar-dark bg-dark shadow-sm">
+<nav
+    class="navbar navbar-dark bg-dark shadow-sm"
+>
 
-    <div class="container d-flex gap-2">
+    <div
+        class="container d-flex gap-2"
+    >
 
         <a
             class="navbar-brand fw-semibold"
@@ -66,7 +75,9 @@
 </nav>
 
 
-<div class="container my-4">
+<div
+    class="container my-4"
+>
 
 
     <div
@@ -82,12 +93,16 @@
         class="d-none"
     >
 
-        <div class="row g-4">
+        <div
+            class="row g-4"
+        >
 
 
             <!-- GENERAL CHAT -->
 
-            <div class="col-lg-9">
+            <div
+                class="col-lg-8"
+            >
 
                 <div
                     class="card shadow-sm chat-card"
@@ -163,12 +178,30 @@
                             class="messages-container mb-2"
                         >
 
-                            <p
+                            <div
                                 id="emptyMessages"
-                                class="text-secondary text-center my-4"
+                                class="chat-empty-state"
                             >
-                                Ziņu vēl nav.
-                            </p>
+
+                                <div
+                                    class="chat-empty-icon"
+                                >
+                                    💬
+                                </div>
+
+
+                                <h5>
+                                    Ziņu vēl nav
+                                </h5>
+
+
+                                <p
+                                    class="mb-0"
+                                >
+                                    Sāc sarunu ar sava kursa studentiem.
+                                </p>
+
+                            </div>
 
                         </div>
 
@@ -187,12 +220,15 @@
                             >
 
                                 <span>
+
                                     Nelasītas ziņas:
+
                                     <strong
                                         id="unreadCount"
                                     >
                                         0
                                     </strong>
+
                                 </span>
 
 
@@ -225,7 +261,9 @@
                                 class="d-flex justify-content-between align-items-start gap-3"
                             >
 
-                                <div class="overflow-hidden">
+                                <div
+                                    class="overflow-hidden"
+                                >
 
                                     <small
                                         class="text-secondary"
@@ -235,10 +273,12 @@
 
 
                                     <div>
+
                                         <strong
                                             id="replyUsername"
                                         >
                                         </strong>
+
                                     </div>
 
 
@@ -303,25 +343,39 @@
             </div>
 
 
-            <!-- PARTICIPANTS -->
+            <!-- SIDEBAR -->
 
-            <div class="col-lg-3">
+            <div
+                class="col-lg-4"
+            >
 
                 <div
-                    class="card shadow-sm online-card"
+                    class="card shadow-sm sidebar-card"
                 >
 
+
                     <div
-                        class="card-header bg-body"
+                        class="card-header bg-body p-0"
                     >
 
                         <div
-                            class="d-flex justify-content-between align-items-center"
+                            class="d-flex justify-content-between align-items-center px-3 pt-3 pb-2"
                         >
 
-                            <strong>
-                                Dalībnieki
-                            </strong>
+                            <div>
+
+                                <strong>
+                                    Saziņa
+                                </strong>
+
+
+                                <div
+                                    class="sidebar-subtitle"
+                                >
+                                    Privātās sarakstes un kursa dalībnieki
+                                </div>
+
+                            </div>
 
 
                             <span
@@ -333,18 +387,104 @@
 
                         </div>
 
+
+                        <ul
+                            class="nav nav-tabs nav-fill sidebar-tabs px-2"
+                            role="tablist"
+                        >
+
+                            <li
+                                class="nav-item"
+                                role="presentation"
+                            >
+
+                                <button
+                                    id="conversationsTabButton"
+                                    class="nav-link active"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#conversationsPane"
+                                    type="button"
+                                    role="tab"
+                                >
+                                    Sarakstes
+                                </button>
+
+                            </li>
+
+
+                            <li
+                                class="nav-item"
+                                role="presentation"
+                            >
+
+                                <button
+                                    id="participantsTabButton"
+                                    class="nav-link"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#participantsPane"
+                                    type="button"
+                                    role="tab"
+                                >
+                                    Dalībnieki
+                                </button>
+
+                            </li>
+
+                        </ul>
+
                     </div>
 
 
                     <div
-                        id="courseUsers"
-                        class="list-group list-group-flush"
+                        class="tab-content sidebar-content"
                     >
 
+
+                        <!-- CONVERSATIONS -->
+
                         <div
-                            class="list-group-item text-secondary"
+                            id="conversationsPane"
+                            class="tab-pane fade show active"
+                            role="tabpanel"
                         >
-                            Ielādē dalībniekus...
+
+                            <div
+                                id="conversationList"
+                                class="list-group list-group-flush"
+                            >
+
+                                <div
+                                    class="list-group-item text-secondary py-3"
+                                >
+                                    Ielādē sarakstes...
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PARTICIPANTS -->
+
+                        <div
+                            id="participantsPane"
+                            class="tab-pane fade"
+                            role="tabpanel"
+                        >
+
+                            <div
+                                id="courseUsers"
+                                class="list-group list-group-flush"
+                            >
+
+                                <div
+                                    class="list-group-item text-secondary py-3"
+                                >
+                                    Ielādē dalībniekus...
+                                </div>
+
+                            </div>
+
                         </div>
 
                     </div>
@@ -360,9 +500,7 @@
 </div>
 
 
-<!-- ======================================
-     PRIVATE MESSAGE MODAL
-     ====================================== -->
+<!-- PRIVATE MESSAGE MODAL -->
 
 <div
     class="modal fade"
@@ -375,25 +513,44 @@
         class="modal-dialog modal-dialog-centered modal-lg"
     >
 
-        <div class="modal-content">
+        <div
+            class="modal-content"
+        >
 
-            <div class="modal-header">
 
-                <div>
+            <div
+                class="modal-header"
+            >
 
-                    <h5
-                        id="privateChatUsername"
-                        class="modal-title"
+                <div
+                    class="d-flex align-items-center gap-3"
+                >
+
+                    <div
+                        id="privateChatAvatar"
+                        class="user-avatar user-avatar-lg"
                     >
-                        Privāta sarakste
-                    </h5>
+                        ?
+                    </div>
 
 
-                    <small
-                        id="privateChatStatus"
-                        class="text-secondary"
-                    >
-                    </small>
+                    <div>
+
+                        <h5
+                            id="privateChatUsername"
+                            class="modal-title"
+                        >
+                            Privāta sarakste
+                        </h5>
+
+
+                        <small
+                            id="privateChatStatus"
+                            class="text-secondary"
+                        >
+                        </small>
+
+                    </div>
 
                 </div>
 
@@ -409,7 +566,9 @@
             </div>
 
 
-            <div class="modal-body">
+            <div
+                class="modal-body"
+            >
 
                 <div
                     id="privateMessages"
@@ -427,7 +586,9 @@
             </div>
 
 
-            <div class="modal-footer d-block">
+            <div
+                class="modal-footer d-block"
+            >
 
                 <div
                     id="privateMessageError"
@@ -436,7 +597,9 @@
                 </div>
 
 
-                <div class="input-group">
+                <div
+                    class="input-group"
+                >
 
                     <input
                         type="text"

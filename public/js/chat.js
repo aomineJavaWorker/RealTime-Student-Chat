@@ -1,6 +1,7 @@
-const socket = io({
-    autoConnect: false
-});
+const socket =
+    io({
+        autoConnect: false
+    });
 
 
 // ==========================================
@@ -8,103 +9,200 @@ const socket = io({
 // ==========================================
 
 const loadingMessage =
-    document.getElementById("loadingMessage");
+    document.getElementById(
+        "loadingMessage"
+    );
+
 
 const chatSection =
-    document.getElementById("chatSection");
+    document.getElementById(
+        "chatSection"
+    );
+
 
 const chatTitle =
-    document.getElementById("chatTitle");
+    document.getElementById(
+        "chatTitle"
+    );
+
 
 const courseName =
-    document.getElementById("courseName");
+    document.getElementById(
+        "courseName"
+    );
+
 
 const usernameDisplay =
-    document.getElementById("usernameDisplay");
+    document.getElementById(
+        "usernameDisplay"
+    );
+
 
 const logoutButton =
-    document.getElementById("logoutButton");
+    document.getElementById(
+        "logoutButton"
+    );
+
 
 const messages =
-    document.getElementById("messages");
+    document.getElementById(
+        "messages"
+    );
+
 
 const messageInput =
-    document.getElementById("messageInput");
+    document.getElementById(
+        "messageInput"
+    );
+
 
 const sendButton =
-    document.getElementById("sendButton");
+    document.getElementById(
+        "sendButton"
+    );
+
 
 const messageError =
-    document.getElementById("messageError");
+    document.getElementById(
+        "messageError"
+    );
+
+
+const conversationList =
+    document.getElementById(
+        "conversationList"
+    );
+
 
 const courseUsers =
-    document.getElementById("courseUsers");
+    document.getElementById(
+        "courseUsers"
+    );
+
 
 const onlineUsersCount =
-    document.getElementById("onlineUsersCount");
+    document.getElementById(
+        "onlineUsersCount"
+    );
+
+
+const conversationsTabButton =
+    document.getElementById(
+        "conversationsTabButton"
+    );
+
+
+const participantsTabButton =
+    document.getElementById(
+        "participantsTabButton"
+    );
+
 
 const typingIndicator =
-    document.getElementById("typingIndicator");
+    document.getElementById(
+        "typingIndicator"
+    );
+
 
 const unreadIndicator =
-    document.getElementById("unreadIndicator");
+    document.getElementById(
+        "unreadIndicator"
+    );
+
 
 const unreadCount =
-    document.getElementById("unreadCount");
+    document.getElementById(
+        "unreadCount"
+    );
+
 
 const replyPreview =
-    document.getElementById("replyPreview");
+    document.getElementById(
+        "replyPreview"
+    );
+
 
 const replyUsername =
-    document.getElementById("replyUsername");
+    document.getElementById(
+        "replyUsername"
+    );
+
 
 const replyText =
-    document.getElementById("replyText");
+    document.getElementById(
+        "replyText"
+    );
+
 
 const cancelReplyButton =
-    document.getElementById("cancelReplyButton");
+    document.getElementById(
+        "cancelReplyButton"
+    );
+
 
 const searchInput =
-    document.getElementById("searchInput");
+    document.getElementById(
+        "searchInput"
+    );
+
 
 const clearSearchButton =
-    document.getElementById("clearSearchButton");
+    document.getElementById(
+        "clearSearchButton"
+    );
+
 
 const searchEmpty =
-    document.getElementById("searchEmpty");
+    document.getElementById(
+        "searchEmpty"
+    );
 
 
-// PRIVATE CHAT
+// ==========================================
+// PRIVATE CHAT ELEMENTS
+// ==========================================
 
 const privateMessageModalElement =
     document.getElementById(
         "privateMessageModal"
     );
 
+
+const privateChatAvatar =
+    document.getElementById(
+        "privateChatAvatar"
+    );
+
+
 const privateChatUsername =
     document.getElementById(
         "privateChatUsername"
     );
+
 
 const privateChatStatus =
     document.getElementById(
         "privateChatStatus"
     );
 
+
 const privateMessages =
     document.getElementById(
         "privateMessages"
     );
+
 
 const privateMessageInput =
     document.getElementById(
         "privateMessageInput"
     );
 
+
 const privateSendButton =
     document.getElementById(
         "privateSendButton"
     );
+
 
 const privateMessageError =
     document.getElementById(
@@ -120,33 +218,6 @@ const privateMessageModal =
 
 const basePageTitle =
     "Čats | Student Chat";
-
-
-// ==========================================
-// STATE
-// ==========================================
-
-let currentUserId = null;
-
-let currentUsername = null;
-
-let currentCourseNumber = null;
-
-let currentReplyTo = null;
-
-let typingTimer = null;
-
-let isTyping = false;
-
-let unreadMessageCount = 0;
-
-let courseParticipants = [];
-
-let onlineUserIds =
-    new Set();
-
-let currentPrivateUser =
-    null;
 
 
 const reactionTypes = [
@@ -166,36 +237,167 @@ const reactionTypes = [
 
 
 // ==========================================
+// STATE
+// ==========================================
+
+let currentUserId =
+    null;
+
+
+let currentUsername =
+    null;
+
+
+let currentCourseNumber =
+    null;
+
+
+let currentReplyTo =
+    null;
+
+
+let typingTimer =
+    null;
+
+
+let isTyping =
+    false;
+
+
+let unreadMessageCount =
+    0;
+
+
+let courseParticipants =
+    [];
+
+
+let privateConversations =
+    [];
+
+
+let onlineUserIds =
+    new Set();
+
+
+let currentPrivateUser =
+    null;
+
+
+// ==========================================
 // HELPERS
 // ==========================================
 
 function getEntityId(value) {
+
     if (!value) {
         return "";
     }
 
+
     if (
-        typeof value === "object"
+        typeof value ===
+        "object"
     ) {
+
         return String(
-            value._id || ""
+            value._id ||
+            ""
         );
+
     }
 
-    return String(value);
+
+    return String(
+        value
+    );
+
+}
+
+
+function getInitial(
+    username
+) {
+
+    return String(
+        username ||
+        "?"
+    )
+        .trim()
+        .charAt(0)
+        .toUpperCase() ||
+        "?";
+
+}
+
+
+function formatConversationTime(
+    value
+) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    const now =
+        new Date();
+
+
+    const sameDay =
+        date.toDateString() ===
+        now.toDateString();
+
+
+    if (sameDay) {
+
+        return date.toLocaleTimeString(
+            "lv-LV",
+            {
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
+            }
+        );
+
+    }
+
+
+    return date.toLocaleDateString(
+        "lv-LV",
+        {
+            day:
+                "2-digit",
+
+            month:
+                "2-digit"
+        }
+    );
+
 }
 
 
 // ==========================================
-// INITIALIZE
+// INITIALIZE CHAT
 // ==========================================
 
 async function initializeChat() {
+
     try {
+
         const response =
             await fetch(
                 "/api/auth/me"
             );
+
 
         const data =
             await response.json();
@@ -205,18 +407,24 @@ async function initializeChat() {
             !response.ok ||
             !data.authenticated
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         currentUserId =
-            String(data.user._id);
+            String(
+                data.user._id
+            );
+
 
         currentUsername =
             data.user.username;
+
 
         currentCourseNumber =
             Number(
@@ -252,26 +460,35 @@ async function initializeChat() {
 
         await Promise.all([
             loadMessages(),
-            loadCourseUsers()
+            loadCourseUsers(),
+            loadConversations()
         ]);
 
 
         messageInput.focus();
 
     } catch (error) {
+
         loadingMessage.classList.remove(
             "alert-light"
         );
+
 
         loadingMessage.classList.add(
             "alert-danger"
         );
 
+
         loadingMessage.textContent =
             "Neizdevās ielādēt čatu.";
 
-        console.error(error);
+
+        console.error(
+            error
+        );
+
     }
+
 }
 
 
@@ -280,22 +497,30 @@ async function initializeChat() {
 // ==========================================
 
 function joinSocketCourse() {
-    if (!currentUserId) {
-        return;
+
+    if (
+        currentUserId
+    ) {
+
+        socket.emit(
+            "joinCourse"
+        );
+
     }
 
-    socket.emit(
-        "joinCourse"
-    );
 }
 
 
 socket.on(
     "connect",
     () => {
-        isTyping = false;
+
+        isTyping =
+            false;
+
 
         joinSocketCourse();
+
     }
 );
 
@@ -303,11 +528,15 @@ socket.on(
 socket.on(
     "disconnect",
     () => {
-        isTyping = false;
+
+        isTyping =
+            false;
+
 
         clearTimeout(
             typingTimer
         );
+
     }
 );
 
@@ -315,54 +544,68 @@ socket.on(
 socket.on(
     "connect_error",
     () => {
+
         showMessageError(
             "Neizdevās izveidot reāllaika savienojumu."
         );
+
     }
 );
 
 
 // ==========================================
-// COURSE PARTICIPANTS
+// COURSE USERS
 // ==========================================
 
 async function loadCourseUsers() {
+
     try {
+
         const response =
             await fetch(
                 "/api/private-messages/users"
             );
+
 
         const data =
             await response.json();
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās ielādēt dalībniekus."
             );
+
         }
 
 
         courseParticipants =
             data.map(
                 (user) => ({
+
                     _id:
-                        String(user._id),
+                        String(
+                            user._id
+                        ),
 
                     username:
                         user.username
+
                 })
             );
 
@@ -370,48 +613,411 @@ async function loadCourseUsers() {
         renderCourseUsers();
 
     } catch (error) {
-        courseUsers.innerHTML = `
-            <div class="list-group-item text-danger">
+
+        courseUsers.innerHTML =
+            `
+            <div
+                class="list-group-item text-danger py-3"
+            >
                 ${escapeText(error.message)}
             </div>
-        `;
+            `;
+
     }
+
 }
 
 
+// ==========================================
+// CONVERSATIONS
+// ==========================================
+
+async function loadConversations() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/private-messages/conversations"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status ===
+            401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās ielādēt sarakstes."
+            );
+
+        }
+
+
+        privateConversations =
+            data.map(
+                (conversation) => ({
+
+                    user: {
+
+                        _id:
+                            String(
+                                conversation
+                                    .user
+                                    ._id
+                            ),
+
+                        username:
+                            conversation
+                                .user
+                                .username
+
+                    },
+
+
+                    lastMessage:
+                        conversation.lastMessage
+
+                })
+            );
+
+
+        renderConversations();
+
+    } catch (error) {
+
+        conversationList.innerHTML =
+            `
+            <div
+                class="list-group-item text-danger py-3"
+            >
+                ${escapeText(error.message)}
+            </div>
+            `;
+
+    }
+
+}
+
+
+function renderConversations() {
+
+    conversationList.innerHTML =
+        "";
+
+
+    if (
+        privateConversations.length ===
+        0
+    ) {
+
+        const empty =
+            document.createElement(
+                "div"
+            );
+
+
+        empty.className =
+            "sidebar-empty-state";
+
+
+        empty.innerHTML =
+            `
+            <div
+                class="sidebar-empty-icon"
+            >
+                💬
+            </div>
+
+            <strong
+                class="d-block mb-1"
+            >
+                Sarakstu vēl nav
+            </strong>
+
+            <div
+                class="small mb-3"
+            >
+                Izvēlies kursa dalībnieku un uzraksti pirmo privāto ziņu.
+            </div>
+            `;
+
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.type =
+            "button";
+
+
+        button.className =
+            "btn btn-sm btn-outline-primary";
+
+
+        button.textContent =
+            "Atvērt dalībniekus";
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                bootstrap.Tab
+                    .getOrCreateInstance(
+                        participantsTabButton
+                    )
+                    .show();
+
+            }
+        );
+
+
+        empty.appendChild(
+            button
+        );
+
+
+        conversationList.appendChild(
+            empty
+        );
+
+
+        return;
+
+    }
+
+
+    privateConversations.forEach(
+        (conversation) => {
+
+            const user =
+                conversation.user;
+
+
+            const isOnline =
+                onlineUserIds.has(
+                    user._id
+                );
+
+
+            const item =
+                document.createElement(
+                    "button"
+                );
+
+
+            item.type =
+                "button";
+
+
+            item.className =
+                "list-group-item list-group-item-action conversation-item";
+
+
+            // AVATAR
+
+            const avatar =
+                document.createElement(
+                    "div"
+                );
+
+
+            avatar.className =
+                `user-avatar${isOnline ? " avatar-online" : ""}`;
+
+
+            avatar.textContent =
+                getInitial(
+                    user.username
+                );
+
+
+            // MAIN
+
+            const main =
+                document.createElement(
+                    "div"
+                );
+
+
+            main.className =
+                "conversation-main";
+
+
+            const top =
+                document.createElement(
+                    "div"
+                );
+
+
+            top.className =
+                "conversation-top";
+
+
+            const name =
+                document.createElement(
+                    "div"
+                );
+
+
+            name.className =
+                "conversation-name";
+
+
+            name.textContent =
+                user.username;
+
+
+            const time =
+                document.createElement(
+                    "span"
+                );
+
+
+            time.className =
+                "conversation-time";
+
+
+            time.textContent =
+                formatConversationTime(
+                    conversation
+                        .lastMessage
+                        ?.createdAt
+                );
+
+
+            top.appendChild(
+                name
+            );
+
+
+            top.appendChild(
+                time
+            );
+
+
+            const preview =
+                document.createElement(
+                    "div"
+                );
+
+
+            preview.className =
+                "conversation-preview";
+
+
+            const prefix =
+                conversation
+                    .lastMessage
+                    ?.isOwn
+
+                    ? "Tu: "
+
+                    : "";
+
+
+            preview.textContent =
+                `${prefix}${conversation.lastMessage?.text || ""}`;
+
+
+            main.appendChild(
+                top
+            );
+
+
+            main.appendChild(
+                preview
+            );
+
+
+            item.appendChild(
+                avatar
+            );
+
+
+            item.appendChild(
+                main
+            );
+
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    openPrivateChat(
+                        user
+                    );
+
+                }
+            );
+
+
+            conversationList.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
+// RENDER COURSE USERS
+// ==========================================
+
 function renderCourseUsers() {
+
     courseUsers.innerHTML =
         "";
 
 
     const users =
-        [...courseParticipants];
+        [
+            ...courseParticipants
+        ];
 
 
     users.sort(
         (a, b) => {
-            const aIsCurrent =
+
+            const aCurrent =
                 a._id ===
                 currentUserId;
 
-            const bIsCurrent =
+
+            const bCurrent =
                 b._id ===
                 currentUserId;
 
 
             if (
-                aIsCurrent &&
-                !bIsCurrent
+                aCurrent !==
+                bCurrent
             ) {
-                return -1;
-            }
 
+                return aCurrent
+                    ? -1
+                    : 1;
 
-            if (
-                bIsCurrent &&
-                !aIsCurrent
-            ) {
-                return 1;
             }
 
 
@@ -419,6 +1025,7 @@ function renderCourseUsers() {
                 onlineUserIds.has(
                     a._id
                 );
+
 
             const bOnline =
                 onlineUserIds.has(
@@ -430,9 +1037,11 @@ function renderCourseUsers() {
                 aOnline !==
                 bOnline
             ) {
+
                 return aOnline
                     ? -1
                     : 1;
+
             }
 
 
@@ -440,28 +1049,38 @@ function renderCourseUsers() {
                 b.username,
                 "lv"
             );
+
         }
     );
 
 
     if (
-        users.length === 0
+        users.length ===
+        0
     ) {
-        courseUsers.innerHTML = `
-            <div class="list-group-item text-secondary">
+
+        courseUsers.innerHTML =
+            `
+            <div
+                class="list-group-item text-secondary py-3"
+            >
                 Dalībnieku nav.
             </div>
-        `;
+            `;
+
 
         return;
+
     }
 
 
     users.forEach(
         (user) => {
+
             const isCurrent =
                 user._id ===
                 currentUserId;
+
 
             const isOnline =
                 onlineUserIds.has(
@@ -475,34 +1094,24 @@ function renderCourseUsers() {
                 );
 
 
-            item.classList.add(
-                "list-group-item",
-                "d-flex",
-                "align-items-center",
-                "gap-2"
-            );
+            item.className =
+                "list-group-item d-flex align-items-center gap-2 participant-item py-3";
 
 
-            const dot =
+            const avatar =
                 document.createElement(
-                    "span"
+                    "div"
                 );
 
 
-            dot.classList.add(
-                "participant-status-dot"
-            );
+            avatar.className =
+                `user-avatar${isOnline ? " avatar-online" : ""}`;
 
 
-            dot.classList.add(
-                isOnline
-                    ? "text-success"
-                    : "text-secondary"
-            );
-
-
-            dot.textContent =
-                "●";
+            avatar.textContent =
+                getInitial(
+                    user.username
+                );
 
 
             const info =
@@ -511,10 +1120,8 @@ function renderCourseUsers() {
                 );
 
 
-            info.classList.add(
-                "participant-info",
-                "flex-grow-1"
-            );
+            info.className =
+                "participant-info";
 
 
             const name =
@@ -523,10 +1130,8 @@ function renderCourseUsers() {
                 );
 
 
-            name.classList.add(
-                "participant-name",
-                "fw-semibold"
-            );
+            name.className =
+                "participant-name";
 
 
             name.textContent =
@@ -539,10 +1144,8 @@ function renderCourseUsers() {
                 );
 
 
-            state.classList.add(
-                "participant-state",
-                "text-secondary"
-            );
+            state.className =
+                `participant-state ${isOnline ? "text-success" : "text-secondary"}`;
 
 
             state.textContent =
@@ -562,7 +1165,7 @@ function renderCourseUsers() {
 
 
             item.appendChild(
-                dot
+                avatar
             );
 
 
@@ -572,16 +1175,15 @@ function renderCourseUsers() {
 
 
             if (isCurrent) {
+
                 const badge =
                     document.createElement(
                         "span"
                     );
 
 
-                badge.classList.add(
-                    "badge",
-                    "text-bg-primary"
-                );
+                badge.className =
+                    "badge text-bg-primary";
 
 
                 badge.textContent =
@@ -593,6 +1195,7 @@ function renderCourseUsers() {
                 );
 
             } else {
+
                 const button =
                     document.createElement(
                         "button"
@@ -603,11 +1206,8 @@ function renderCourseUsers() {
                     "button";
 
 
-                button.classList.add(
-                    "btn",
-                    "btn-sm",
-                    "btn-outline-primary"
-                );
+                button.className =
+                    "btn btn-sm btn-outline-primary";
 
 
                 button.textContent =
@@ -617,9 +1217,11 @@ function renderCourseUsers() {
                 button.addEventListener(
                     "click",
                     () => {
+
                         openPrivateChat(
                             user
                         );
+
                     }
                 );
 
@@ -627,18 +1229,21 @@ function renderCourseUsers() {
                 item.appendChild(
                     button
                 );
+
             }
 
 
             courseUsers.appendChild(
                 item
             );
+
         }
     );
 
 
     onlineUsersCount.textContent =
         `${onlineUserIds.size} online`;
+
 }
 
 
@@ -649,6 +1254,7 @@ function renderCourseUsers() {
 socket.on(
     "onlineUsers",
     (users) => {
+
         onlineUserIds =
             new Set(
                 users.map(
@@ -663,18 +1269,31 @@ socket.on(
         renderCourseUsers();
 
 
+        renderConversations();
+
+
         updatePrivateChatStatus();
+
     }
 );
 
 
 // ==========================================
-// PRIVATE CHAT
+// OPEN PRIVATE CHAT
 // ==========================================
 
-async function openPrivateChat(user) {
+async function openPrivateChat(
+    user
+) {
+
     currentPrivateUser =
         user;
+
+
+    privateChatAvatar.textContent =
+        getInitial(
+            user.username
+        );
 
 
     privateChatUsername.textContent =
@@ -684,11 +1303,14 @@ async function openPrivateChat(user) {
     updatePrivateChatStatus();
 
 
-    privateMessages.innerHTML = `
-        <div class="text-secondary text-center my-4">
+    privateMessages.innerHTML =
+        `
+        <div
+            class="text-secondary text-center my-4"
+        >
             Ielādē saraksti...
         </div>
-    `;
+        `;
 
 
     hidePrivateMessageError();
@@ -700,12 +1322,18 @@ async function openPrivateChat(user) {
     await loadPrivateMessages(
         user._id
     );
+
 }
 
 
 function updatePrivateChatStatus() {
-    if (!currentPrivateUser) {
+
+    if (
+        !currentPrivateUser
+    ) {
+
         return;
+
     }
 
 
@@ -731,13 +1359,26 @@ function updatePrivateChatStatus() {
         "text-secondary",
         !isOnline
     );
+
+
+    privateChatAvatar.classList.toggle(
+        "avatar-online",
+        isOnline
+    );
+
 }
 
+
+// ==========================================
+// LOAD PRIVATE MESSAGES
+// ==========================================
 
 async function loadPrivateMessages(
     userId
 ) {
+
     try {
+
         const response =
             await fetch(
                 `/api/private-messages/${userId}`
@@ -749,20 +1390,25 @@ async function loadPrivateMessages(
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās ielādēt privātās ziņas."
             );
+
         }
 
 
@@ -771,7 +1417,9 @@ async function loadPrivateMessages(
             currentPrivateUser._id !==
                 userId
         ) {
+
             return;
+
         }
 
 
@@ -780,11 +1428,14 @@ async function loadPrivateMessages(
 
 
         if (
-            data.length === 0
+            data.length ===
+            0
         ) {
+
             showEmptyPrivateMessages();
 
             return;
+
         }
 
 
@@ -796,25 +1447,36 @@ async function loadPrivateMessages(
         scrollPrivateMessagesToBottom();
 
     } catch (error) {
+
         privateMessages.innerHTML =
             "";
+
 
         showPrivateMessageError(
             error.message
         );
+
     }
+
 }
 
+
+// ==========================================
+// PRIVATE MESSAGE UI
+// ==========================================
 
 function addPrivateMessageToChat(
     message
 ) {
+
     if (
         privateMessages.querySelector(
             `[data-private-message-id="${message._id}"]`
         )
     ) {
+
         return;
+
     }
 
 
@@ -842,16 +1504,8 @@ function addPrivateMessageToChat(
         );
 
 
-    row.classList.add(
-        "private-message-row"
-    );
-
-
-    row.classList.add(
-        isOwn
-            ? "private-message-own"
-            : "private-message-other"
-    );
+    row.className =
+        `private-message-row ${isOwn ? "private-message-own" : "private-message-other"}`;
 
 
     row.dataset.privateMessageId =
@@ -864,9 +1518,8 @@ function addPrivateMessageToChat(
         );
 
 
-    wrapper.classList.add(
-        "private-message-wrapper"
-    );
+    wrapper.className =
+        "private-message-wrapper";
 
 
     const bubble =
@@ -875,9 +1528,8 @@ function addPrivateMessageToChat(
         );
 
 
-    bubble.classList.add(
-        "private-message-bubble"
-    );
+    bubble.className =
+        "private-message-bubble";
 
 
     const text =
@@ -886,18 +1538,12 @@ function addPrivateMessageToChat(
         );
 
 
-    text.classList.add(
-        "private-message-text"
-    );
+    text.className =
+        "private-message-text";
 
 
     text.textContent =
         message.text;
-
-
-    bubble.appendChild(
-        text
-    );
 
 
     const time =
@@ -906,26 +1552,35 @@ function addPrivateMessageToChat(
         );
 
 
-    time.classList.add(
-        "private-message-time"
-    );
+    time.className =
+        "private-message-time";
 
 
-    if (message.createdAt) {
+    if (
+        message.createdAt
+    ) {
+
         time.textContent =
             new Date(
                 message.createdAt
-            ).toLocaleTimeString(
-                "lv-LV",
-                {
-                    hour:
-                        "2-digit",
+            )
+                .toLocaleTimeString(
+                    "lv-LV",
+                    {
+                        hour:
+                            "2-digit",
 
-                    minute:
-                        "2-digit"
-                }
-            );
+                        minute:
+                            "2-digit"
+                    }
+                );
+
     }
+
+
+    bubble.appendChild(
+        text
+    );
 
 
     wrapper.appendChild(
@@ -946,30 +1601,45 @@ function addPrivateMessageToChat(
     privateMessages.appendChild(
         row
     );
+
 }
 
 
+// ==========================================
+// SEND PRIVATE MESSAGE
+// ==========================================
+
 async function sendPrivateMessage() {
-    if (!currentPrivateUser) {
+
+    if (
+        !currentPrivateUser
+    ) {
+
         return;
+
     }
 
 
     const text =
-        privateMessageInput.value
+        privateMessageInput
+            .value
             .trim();
 
 
     if (!text) {
+
         showPrivateMessageError(
             "Lūdzu, ievadi ziņu!"
         );
 
+
         return;
+
     }
 
 
     try {
+
         privateSendButton.disabled =
             true;
 
@@ -1000,26 +1670,28 @@ async function sendPrivateMessage() {
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās nosūtīt privāto ziņu."
             );
+
         }
 
 
-        // Socket event arī atnāks.
-        // Duplicate check neļaus ziņu
-        // parādīt divreiz.
         addPrivateMessageToChat(
             data
         );
@@ -1037,15 +1709,22 @@ async function sendPrivateMessage() {
 
         privateMessageInput.focus();
 
+
+        await loadConversations();
+
     } catch (error) {
+
         showPrivateMessageError(
             error.message
         );
 
     } finally {
+
         privateSendButton.disabled =
             false;
+
     }
+
 }
 
 
@@ -1058,14 +1737,20 @@ privateSendButton.addEventListener(
 privateMessageInput.addEventListener(
     "keydown",
     (event) => {
+
         if (
-            event.key === "Enter" &&
+            event.key ===
+                "Enter" &&
             !event.shiftKey
         ) {
+
             event.preventDefault();
 
+
             sendPrivateMessage();
+
         }
+
     }
 );
 
@@ -1073,7 +1758,9 @@ privateMessageInput.addEventListener(
 privateMessageModalElement.addEventListener(
     "shown.bs.modal",
     () => {
+
         privateMessageInput.focus();
+
     }
 );
 
@@ -1081,13 +1768,22 @@ privateMessageModalElement.addEventListener(
 privateMessageModalElement.addEventListener(
     "hidden.bs.modal",
     () => {
+
         currentPrivateUser =
             null;
+
 
         privateMessageInput.value =
             "";
 
+
         hidePrivateMessageError();
+
+
+        privateChatAvatar.classList.remove(
+            "avatar-online"
+        );
+
     }
 );
 
@@ -1098,11 +1794,13 @@ privateMessageModalElement.addEventListener(
 
 socket.on(
     "privateMessage",
-    (message) => {
+    async (message) => {
+
         const senderId =
             getEntityId(
                 message.sender
             );
+
 
         const recipientId =
             getEntityId(
@@ -1110,21 +1808,24 @@ socket.on(
             );
 
 
-        const belongsToCurrentUser =
-            senderId === currentUserId ||
-            recipientId === currentUserId;
-
-
         if (
-            !belongsToCurrentUser
+            senderId !==
+                currentUserId &&
+            recipientId !==
+                currentUserId
         ) {
+
             return;
+
         }
 
 
         const partnerId =
-            senderId === currentUserId
+            senderId ===
+                currentUserId
+
                 ? recipientId
+
                 : senderId;
 
 
@@ -1133,13 +1834,19 @@ socket.on(
             currentPrivateUser._id ===
                 partnerId
         ) {
+
             addPrivateMessageToChat(
                 message
             );
 
 
             scrollPrivateMessagesToBottom();
+
         }
+
+
+        await loadConversations();
+
     }
 );
 
@@ -1149,15 +1856,18 @@ socket.on(
 // ==========================================
 
 function isChatActive() {
+
     return (
         document.visibilityState ===
             "visible" &&
         document.hasFocus()
     );
+
 }
 
 
 function isMessagesNearBottom() {
+
     const distanceFromBottom =
         messages.scrollHeight -
         messages.scrollTop -
@@ -1168,17 +1878,21 @@ function isMessagesNearBottom() {
         distanceFromBottom <=
         80
     );
+
 }
 
 
 function updateUnreadIndicator() {
+
     unreadCount.textContent =
         unreadMessageCount;
 
 
     if (
-        unreadMessageCount > 0
+        unreadMessageCount >
+        0
     ) {
+
         unreadIndicator.classList.remove(
             "d-none"
         );
@@ -1188,6 +1902,7 @@ function updateUnreadIndicator() {
             `${basePageTitle} (${unreadMessageCount})`;
 
     } else {
+
         unreadIndicator.classList.add(
             "d-none"
         );
@@ -1195,28 +1910,40 @@ function updateUnreadIndicator() {
 
         document.title =
             basePageTitle;
+
     }
+
 }
 
 
 function addUnreadMessage() {
+
     unreadMessageCount++;
 
+
     updateUnreadIndicator();
+
 }
 
 
 function clearUnreadMessages() {
-    unreadMessageCount = 0;
+
+    unreadMessageCount =
+        0;
+
 
     updateUnreadIndicator();
+
 }
 
 
 function goToLatestMessages() {
+
     scrollMessagesToBottom();
 
+
     clearUnreadMessages();
+
 }
 
 
@@ -1229,14 +1956,21 @@ unreadIndicator.addEventListener(
 unreadIndicator.addEventListener(
     "keydown",
     (event) => {
+
         if (
-            event.key === "Enter" ||
-            event.key === " "
+            event.key ===
+                "Enter" ||
+            event.key ===
+                " "
         ) {
+
             event.preventDefault();
 
+
             goToLatestMessages();
+
         }
+
     }
 );
 
@@ -1244,12 +1978,16 @@ unreadIndicator.addEventListener(
 messages.addEventListener(
     "scroll",
     () => {
+
         if (
             isChatActive() &&
             isMessagesNearBottom()
         ) {
+
             clearUnreadMessages();
+
         }
+
     }
 );
 
@@ -1257,14 +1995,18 @@ messages.addEventListener(
 document.addEventListener(
     "visibilitychange",
     () => {
+
         if (
             document.visibilityState ===
                 "visible" &&
             document.hasFocus() &&
             isMessagesNearBottom()
         ) {
+
             clearUnreadMessages();
+
         }
+
     }
 );
 
@@ -1272,11 +2014,15 @@ document.addEventListener(
 window.addEventListener(
     "focus",
     () => {
+
         if (
             isMessagesNearBottom()
         ) {
+
             clearUnreadMessages();
+
         }
+
     }
 );
 
@@ -1286,20 +2032,27 @@ window.addEventListener(
 // ==========================================
 
 function startTyping() {
+
     if (
         !currentUserId ||
         !socket.connected
     ) {
+
         return;
+
     }
 
 
     if (!isTyping) {
+
         socket.emit(
             "typingStart"
         );
 
-        isTyping = true;
+
+        isTyping =
+            true;
+
     }
 
 
@@ -1313,10 +2066,12 @@ function startTyping() {
             stopTyping,
             1200
         );
+
 }
 
 
 function stopTyping() {
+
     clearTimeout(
         typingTimer
     );
@@ -1326,30 +2081,39 @@ function stopTyping() {
         isTyping &&
         socket.connected
     ) {
+
         socket.emit(
             "typingStop"
         );
+
     }
 
 
-    isTyping = false;
+    isTyping =
+        false;
+
 }
 
 
 messageInput.addEventListener(
     "input",
     () => {
+
         if (
             messageInput.value
-                .trim() === ""
+                .trim() ===
+            ""
         ) {
+
             stopTyping();
 
             return;
+
         }
 
 
         startTyping();
+
     }
 );
 
@@ -1360,9 +2124,14 @@ messageInput.addEventListener(
 );
 
 
+// ==========================================
+// TYPING USERS
+// ==========================================
+
 socket.on(
     "typingUsers",
     (users) => {
+
         const otherUsers =
             users.filter(
                 (user) =>
@@ -1374,40 +2143,52 @@ socket.on(
 
 
         if (
-            otherUsers.length === 0
+            otherUsers.length ===
+            0
         ) {
+
             typingIndicator.textContent =
                 "";
+
 
             typingIndicator.classList.add(
                 "d-none"
             );
 
+
             return;
+
         }
 
 
         if (
-            otherUsers.length === 1
+            otherUsers.length ===
+            1
         ) {
+
             typingIndicator.textContent =
                 `${otherUsers[0].username} raksta...`;
 
         } else if (
-            otherUsers.length === 2
+            otherUsers.length ===
+            2
         ) {
+
             typingIndicator.textContent =
                 `${otherUsers[0].username} un ${otherUsers[1].username} raksta...`;
 
         } else {
+
             typingIndicator.textContent =
                 `${otherUsers[0].username}, ${otherUsers[1].username} un vēl ${otherUsers.length - 2} raksta...`;
+
         }
 
 
         typingIndicator.classList.remove(
             "d-none"
         );
+
     }
 );
 
@@ -1417,31 +2198,39 @@ socket.on(
 // ==========================================
 
 async function loadMessages() {
+
     try {
+
         const response =
             await fetch(
                 "/api/messages"
             );
+
 
         const data =
             await response.json();
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās ielādēt ziņas."
             );
+
         }
 
 
@@ -1450,11 +2239,14 @@ async function loadMessages() {
 
 
         if (
-            data.length === 0
+            data.length ===
+            0
         ) {
+
             showEmptyMessages();
 
             return;
+
         }
 
 
@@ -1465,31 +2257,39 @@ async function loadMessages() {
 
         applyMessageSearch();
 
+
         scrollMessagesToBottom();
+
 
         clearUnreadMessages();
 
     } catch (error) {
+
         showMessageError(
             error.message
         );
+
     }
+
 }
 
 
 // ==========================================
-// GENERAL MESSAGE UI
+// ADD GENERAL MESSAGE
 // ==========================================
 
 function addMessageToChat(
     message
 ) {
+
     if (
         messages.querySelector(
             `[data-message-id="${message._id}"]`
         )
     ) {
+
         return;
+
     }
 
 
@@ -1513,33 +2313,35 @@ function addMessageToChat(
         );
 
 
-    messageElement.classList.add(
-        "chat-message",
-        isOwn
-            ? "chat-message-own"
-            : "chat-message-other"
-    );
+    messageElement.className =
+        `chat-message ${isOwn ? "chat-message-own" : "chat-message-other"}`;
 
 
     messageElement.dataset.messageId =
         message._id;
 
+
     messageElement.dataset.messageText =
         message.text;
 
+
     messageElement.dataset.username =
-        message.user?.username || "";
+        message.user?.username ||
+        "";
 
 
     messageElement.addEventListener(
         "dblclick",
         (event) => {
+
             if (
                 event.target.closest(
                     "button, a, input, .dropdown-menu"
                 )
             ) {
+
                 return;
+
             }
 
 
@@ -1547,6 +2349,7 @@ function addMessageToChat(
                 message._id,
                 "👍"
             );
+
         }
     );
 
@@ -1557,10 +2360,13 @@ function addMessageToChat(
         );
 
 
-    wrapper.classList.add(
-        "message-wrapper"
-    );
+    wrapper.className =
+        "message-wrapper";
 
+
+    // ======================================
+    // INFO
+    // ======================================
 
     const info =
         document.createElement(
@@ -1568,9 +2374,8 @@ function addMessageToChat(
         );
 
 
-    info.classList.add(
-        "message-info"
-    );
+    info.className =
+        "message-info";
 
 
     const username =
@@ -1579,16 +2384,18 @@ function addMessageToChat(
         );
 
 
-    username.classList.add(
-        "message-username"
-    );
+    username.className =
+        "message-username";
 
 
     username.textContent =
         isOwn
+
             ? "Tu"
+
             : (
-                message.user?.username ||
+                message.user
+                    ?.username ||
                 "Nezināms lietotājs"
             );
 
@@ -1599,25 +2406,29 @@ function addMessageToChat(
         );
 
 
-    time.classList.add(
-        "message-time"
-    );
+    time.className =
+        "message-time";
 
 
-    if (message.createdAt) {
+    if (
+        message.createdAt
+    ) {
+
         time.textContent =
             new Date(
                 message.createdAt
-            ).toLocaleTimeString(
-                "lv-LV",
-                {
-                    hour:
-                        "2-digit",
+            )
+                .toLocaleTimeString(
+                    "lv-LV",
+                    {
+                        hour:
+                            "2-digit",
 
-                    minute:
-                        "2-digit"
-                }
-            );
+                        minute:
+                            "2-digit"
+                    }
+                );
+
     }
 
 
@@ -1625,14 +2436,20 @@ function addMessageToChat(
         username
     );
 
+
     info.appendChild(
         time
     );
+
 
     wrapper.appendChild(
         info
     );
 
+
+    // ======================================
+    // BUBBLE
+    // ======================================
 
     const bubble =
         document.createElement(
@@ -1640,21 +2457,26 @@ function addMessageToChat(
         );
 
 
-    bubble.classList.add(
-        "message-bubble"
-    );
+    bubble.className =
+        "message-bubble";
 
 
-    if (message.replyTo) {
+    // ======================================
+    // REPLY
+    // ======================================
+
+    if (
+        message.replyTo
+    ) {
+
         const replyElement =
             document.createElement(
                 "div"
             );
 
 
-        replyElement.classList.add(
-            "reply-message"
-        );
+        replyElement.className =
+            "reply-message";
 
 
         replyElement.dataset.replyToId =
@@ -1667,14 +2489,13 @@ function addMessageToChat(
             );
 
 
-        replyUser.classList.add(
-            "fw-semibold",
-            "d-block"
-        );
+        replyUser.className =
+            "fw-semibold d-block";
 
 
         replyUser.textContent =
-            message.replyTo.user?.username ||
+            message.replyTo.user
+                ?.username ||
             "Nezināms lietotājs";
 
 
@@ -1684,9 +2505,8 @@ function addMessageToChat(
             );
 
 
-        replyMessageText.classList.add(
-            "reply-message-text"
-        );
+        replyMessageText.className =
+            "reply-message-text";
 
 
         replyMessageText.textContent =
@@ -1707,8 +2527,13 @@ function addMessageToChat(
         bubble.appendChild(
             replyElement
         );
+
     }
 
+
+    // ======================================
+    // TEXT
+    // ======================================
 
     const textElement =
         document.createElement(
@@ -1716,19 +2541,22 @@ function addMessageToChat(
         );
 
 
-    textElement.classList.add(
-        "message-text"
-    );
+    textElement.className =
+        "message-text";
 
 
     textElement.textContent =
         message.text;
 
 
-    if (message.editedAt) {
+    if (
+        message.editedAt
+    ) {
+
         addEditedLabel(
             textElement
         );
+
     }
 
 
@@ -1742,15 +2570,18 @@ function addMessageToChat(
     );
 
 
+    // ======================================
+    // REACTIONS
+    // ======================================
+
     const reactionsContainer =
         document.createElement(
             "div"
         );
 
 
-    reactionsContainer.classList.add(
-        "reactions-container"
-    );
+    reactionsContainer.className =
+        "reactions-container";
 
 
     wrapper.appendChild(
@@ -1758,15 +2589,18 @@ function addMessageToChat(
     );
 
 
+    // ======================================
+    // ACTIONS
+    // ======================================
+
     const actions =
         document.createElement(
             "div"
         );
 
 
-    actions.classList.add(
-        "message-actions"
-    );
+    actions.className =
+        "message-actions";
 
 
     actions.appendChild(
@@ -1802,8 +2636,10 @@ function addMessageToChat(
 
     renderReactions(
         messageElement,
-        message.reactions || []
+        message.reactions ||
+        []
     );
+
 }
 
 
@@ -1816,15 +2652,15 @@ function createActionMenu(
     messageElement,
     isOwn
 ) {
+
     const dropdown =
         document.createElement(
             "div"
         );
 
 
-    dropdown.classList.add(
-        "dropdown"
-    );
+    dropdown.className =
+        "dropdown";
 
 
     const button =
@@ -1837,12 +2673,8 @@ function createActionMenu(
         "button";
 
 
-    button.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-light",
-        "message-action-button"
-    );
+    button.className =
+        "btn btn-sm btn-light message-action-button";
 
 
     button.setAttribute(
@@ -1861,11 +2693,11 @@ function createActionMenu(
         );
 
 
-    menu.classList.add(
-        "dropdown-menu",
-        "message-menu"
-    );
+    menu.className =
+        "dropdown-menu message-menu";
 
+
+    // REPLY
 
     const replyItem =
         document.createElement(
@@ -1883,9 +2715,8 @@ function createActionMenu(
         "button";
 
 
-    replyButton.classList.add(
-        "dropdown-item"
-    );
+    replyButton.className =
+        "dropdown-item";
 
 
     replyButton.textContent =
@@ -1895,15 +2726,21 @@ function createActionMenu(
     replyButton.addEventListener(
         "click",
         () => {
+
             startReply(
+
                 message._id,
+
                 messageElement
                     .dataset
                     .username,
+
                 messageElement
                     .dataset
                     .messageText
+
             );
+
         }
     );
 
@@ -1918,7 +2755,10 @@ function createActionMenu(
     );
 
 
+    // OWN MESSAGE
+
     if (isOwn) {
+
         const editItem =
             document.createElement(
                 "li"
@@ -1935,9 +2775,8 @@ function createActionMenu(
             "button";
 
 
-        editButton.classList.add(
-            "dropdown-item"
-        );
+        editButton.className =
+            "dropdown-item";
 
 
         editButton.textContent =
@@ -1947,12 +2786,17 @@ function createActionMenu(
         editButton.addEventListener(
             "click",
             () => {
+
                 editMessage(
+
                     message._id,
+
                     messageElement
                         .dataset
                         .messageText
+
                 );
+
             }
         );
 
@@ -1998,10 +2842,8 @@ function createActionMenu(
             "button";
 
 
-        deleteButton.classList.add(
-            "dropdown-item",
-            "text-danger"
-        );
+        deleteButton.className =
+            "dropdown-item text-danger";
 
 
         deleteButton.textContent =
@@ -2011,9 +2853,11 @@ function createActionMenu(
         deleteButton.addEventListener(
             "click",
             () => {
+
                 deleteMessage(
                     message._id
                 );
+
             }
         );
 
@@ -2026,6 +2870,7 @@ function createActionMenu(
         menu.appendChild(
             deleteItem
         );
+
     }
 
 
@@ -2040,6 +2885,7 @@ function createActionMenu(
 
 
     return dropdown;
+
 }
 
 
@@ -2050,15 +2896,15 @@ function createActionMenu(
 function createReactionMenu(
     messageId
 ) {
+
     const dropdown =
         document.createElement(
             "div"
         );
 
 
-    dropdown.classList.add(
-        "dropdown"
-    );
+    dropdown.className =
+        "dropdown";
 
 
     const menuButton =
@@ -2071,13 +2917,8 @@ function createReactionMenu(
         "button";
 
 
-    menuButton.classList.add(
-        "btn",
-        "btn-sm",
-        "btn-light",
-        "message-action-button",
-        "reaction-picker-button"
-    );
+    menuButton.className =
+        "btn btn-sm btn-light message-action-button reaction-picker-button";
 
 
     menuButton.setAttribute(
@@ -2096,11 +2937,8 @@ function createReactionMenu(
         );
 
 
-    menu.classList.add(
-        "dropdown-menu",
-        "reaction-menu",
-        "p-2"
-    );
+    menu.className =
+        "dropdown-menu reaction-menu p-2";
 
 
     const row =
@@ -2109,66 +2947,63 @@ function createReactionMenu(
         );
 
 
-    row.classList.add(
-        "row",
-        "row-cols-4",
-        "g-1"
-    );
+    row.className =
+        "row row-cols-4 g-1";
 
 
     reactionTypes.forEach(
         (reaction) => {
+
             const column =
                 document.createElement(
                     "div"
                 );
 
 
-            column.classList.add(
-                "col"
-            );
+            column.className =
+                "col";
 
 
-            const button =
+            const reactionButton =
                 document.createElement(
                     "button"
                 );
 
 
-            button.type =
+            reactionButton.type =
                 "button";
 
 
-            button.classList.add(
-                "btn",
-                "btn-light",
-                "w-100"
-            );
+            reactionButton.className =
+                "btn btn-light w-100";
 
 
-            button.textContent =
+            reactionButton.textContent =
                 reaction;
 
 
-            button.addEventListener(
+            reactionButton.addEventListener(
                 "click",
                 () => {
+
                     toggleReaction(
                         messageId,
                         reaction
                     );
+
                 }
             );
 
 
             column.appendChild(
-                button
+                reactionButton
             );
 
 
             row.appendChild(
                 column
             );
+
         }
     );
 
@@ -2189,6 +3024,7 @@ function createReactionMenu(
 
 
     return dropdown;
+
 }
 
 
@@ -2200,6 +3036,7 @@ function renderReactions(
     messageElement,
     reactions
 ) {
+
     const container =
         messageElement.querySelector(
             ".reactions-container"
@@ -2207,7 +3044,9 @@ function renderReactions(
 
 
     if (!container) {
+
         return;
+
     }
 
 
@@ -2217,13 +3056,16 @@ function renderReactions(
 
     reactionTypes.forEach(
         (reactionType) => {
+
             const reactionUsers =
                 reactions
+
                     .filter(
                         (reaction) =>
                             reaction.type ===
                             reactionType
                     )
+
                     .map(
                         (reaction) =>
                             getEntityId(
@@ -2236,7 +3078,9 @@ function renderReactions(
                 reactionUsers.length ===
                 0
             ) {
+
                 return;
+
             }
 
 
@@ -2256,14 +3100,8 @@ function renderReactions(
                 "button";
 
 
-            button.classList.add(
-                "btn",
-                "btn-sm",
-                "reaction-badge",
-                currentUserReacted
-                    ? "btn-primary"
-                    : "btn-light"
-            );
+            button.className =
+                `btn btn-sm reaction-badge ${currentUserReacted ? "btn-primary" : "btn-light"}`;
 
 
             button.textContent =
@@ -2273,13 +3111,17 @@ function renderReactions(
             button.addEventListener(
                 "click",
                 () => {
+
                     toggleReaction(
+
                         messageElement
                             .dataset
                             .messageId,
 
                         reactionType
+
                     );
+
                 }
             );
 
@@ -2287,8 +3129,10 @@ function renderReactions(
             container.appendChild(
                 button
             );
+
         }
     );
+
 }
 
 
@@ -2300,7 +3144,9 @@ async function toggleReaction(
     messageId,
     reaction
 ) {
+
     try {
+
         const response =
             await fetch(
                 `/api/messages/${messageId}/reaction`,
@@ -2315,7 +3161,8 @@ async function toggleReaction(
 
                     body:
                         JSON.stringify({
-                            reaction
+                            reaction:
+                                reaction
                         })
                 }
             );
@@ -2326,30 +3173,38 @@ async function toggleReaction(
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās saglabāt reakciju."
             );
+
         }
 
 
         hideMessageError();
 
     } catch (error) {
+
         showMessageError(
             error.message
         );
+
     }
+
 }
 
 
@@ -2358,6 +3213,7 @@ async function toggleReaction(
 // ==========================================
 
 function applyMessageSearch() {
+
     const searchValue =
         searchInput.value
             .trim()
@@ -2376,6 +3232,7 @@ function applyMessageSearch() {
 
     messageElements.forEach(
         (messageElement) => {
+
             const messageText =
                 messageElement
                     .dataset
@@ -2406,8 +3263,11 @@ function applyMessageSearch() {
 
 
             if (matches) {
+
                 visibleMessages++;
+
             }
+
         }
     );
 
@@ -2419,6 +3279,7 @@ function applyMessageSearch() {
         messageElements.length === 0 ||
         visibleMessages > 0
     );
+
 }
 
 
@@ -2431,12 +3292,16 @@ searchInput.addEventListener(
 clearSearchButton.addEventListener(
     "click",
     () => {
+
         searchInput.value =
             "";
 
+
         applyMessageSearch();
 
+
         searchInput.focus();
+
     }
 );
 
@@ -2450,7 +3315,9 @@ function startReply(
     username,
     text
 ) {
+
     currentReplyTo = {
+
         id:
             messageId,
 
@@ -2459,6 +3326,7 @@ function startReply(
 
         text:
             text
+
     };
 
 
@@ -2476,10 +3344,12 @@ function startReply(
 
 
     messageInput.focus();
+
 }
 
 
 function cancelReply() {
+
     currentReplyTo =
         null;
 
@@ -2495,6 +3365,7 @@ function cancelReply() {
     replyPreview.classList.add(
         "d-none"
     );
+
 }
 
 
@@ -2511,6 +3382,7 @@ cancelReplyButton.addEventListener(
 function addEditedLabel(
     textElement
 ) {
+
     textElement
         .querySelector(
             ".edited-label"
@@ -2524,11 +3396,8 @@ function addEditedLabel(
         );
 
 
-    editedElement.classList.add(
-        "text-secondary",
-        "ms-2",
-        "edited-label"
-    );
+    editedElement.className =
+        "text-secondary ms-2 edited-label";
 
 
     editedElement.textContent =
@@ -2538,6 +3407,7 @@ function addEditedLabel(
     textElement.appendChild(
         editedElement
     );
+
 }
 
 
@@ -2549,6 +3419,7 @@ async function editMessage(
     messageId,
     oldText
 ) {
+
     const newText =
         prompt(
             "Rediģē ziņu:",
@@ -2557,9 +3428,12 @@ async function editMessage(
 
 
     if (
-        newText === null
+        newText ===
+        null
     ) {
+
         return;
+
     }
 
 
@@ -2568,15 +3442,19 @@ async function editMessage(
 
 
     if (!trimmedText) {
+
         showMessageError(
             "Ziņa nevar būt tukša."
         );
 
+
         return;
+
     }
 
 
     try {
+
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -2603,30 +3481,38 @@ async function editMessage(
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās rediģēt ziņu."
             );
+
         }
 
 
         hideMessageError();
 
     } catch (error) {
+
         showMessageError(
             error.message
         );
+
     }
+
 }
 
 
@@ -2637,7 +3523,9 @@ async function editMessage(
 async function deleteMessage(
     messageId
 ) {
+
     try {
+
         const response =
             await fetch(
                 `/api/messages/${messageId}`,
@@ -2653,40 +3541,49 @@ async function deleteMessage(
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās izdzēst ziņu."
             );
+
         }
 
 
         hideMessageError();
 
     } catch (error) {
+
         showMessageError(
             error.message
         );
+
     }
+
 }
 
 
 // ==========================================
-// GENERAL MESSAGE SOCKETS
+// NEW MESSAGE
 // ==========================================
 
 socket.on(
     "newMessage",
     (message) => {
+
         const wasNearBottom =
             isMessagesNearBottom();
 
@@ -2707,11 +3604,15 @@ socket.on(
 
 
         if (isOwn) {
+
             scrollMessagesToBottom();
+
 
             clearUnreadMessages();
 
+
             return;
+
         }
 
 
@@ -2719,20 +3620,29 @@ socket.on(
             !isChatActive() ||
             !wasNearBottom
         ) {
+
             addUnreadMessage();
 
+
             return;
+
         }
 
 
         scrollMessagesToBottom();
+
     }
 );
 
 
+// ==========================================
+// MESSAGE UPDATED
+// ==========================================
+
 socket.on(
     "messageUpdated",
     (message) => {
+
         const messageElement =
             messages.querySelector(
                 `[data-message-id="${message._id}"]`
@@ -2740,6 +3650,7 @@ socket.on(
 
 
         if (messageElement) {
+
             messageElement
                 .dataset
                 .messageText =
@@ -2753,6 +3664,7 @@ socket.on(
 
 
             if (textElement) {
+
                 textElement.textContent =
                     message.text;
 
@@ -2760,7 +3672,9 @@ socket.on(
                 addEditedLabel(
                     textElement
                 );
+
             }
+
         }
 
 
@@ -2770,32 +3684,45 @@ socket.on(
             )
             .forEach(
                 (element) => {
+
                     element.textContent =
                         message.text;
+
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(message._id)
+            String(
+                message._id
+            )
         ) {
+
             currentReplyTo.text =
                 message.text;
 
+
             replyText.textContent =
                 message.text;
+
         }
 
 
         applyMessageSearch();
+
     }
 );
 
 
+// ==========================================
+// REACTION UPDATED
+// ==========================================
+
 socket.on(
     "messageReactionUpdated",
     (data) => {
+
         const messageElement =
             messages.querySelector(
                 `[data-message-id="${data.messageId}"]`
@@ -2803,18 +3730,27 @@ socket.on(
 
 
         if (messageElement) {
+
             renderReactions(
                 messageElement,
-                data.reactions || []
+                data.reactions ||
+                []
             );
+
         }
+
     }
 );
 
 
+// ==========================================
+// MESSAGE DELETED
+// ==========================================
+
 socket.on(
     "messageDeleted",
     (messageId) => {
+
         messages
             .querySelector(
                 `[data-message-id="${messageId}"]`
@@ -2828,17 +3764,23 @@ socket.on(
             )
             .forEach(
                 (element) => {
+
                     element.textContent =
                         "Ziņa izdzēsta";
+
                 }
             );
 
 
         if (
             currentReplyTo?.id ===
-            String(messageId)
+            String(
+                messageId
+            )
         ) {
+
             cancelReply();
+
         }
 
 
@@ -2847,13 +3789,17 @@ socket.on(
                 .querySelectorAll(
                     ".chat-message"
                 )
-                .length === 0
+                .length ===
+            0
         ) {
+
             showEmptyMessages();
+
         }
 
 
         applyMessageSearch();
+
     }
 );
 
@@ -2869,12 +3815,14 @@ sendButton.addEventListener(
 
 
 async function sendMessage() {
+
     const text =
         messageInput.value
             .trim();
 
 
     if (!text) {
+
         stopTyping();
 
 
@@ -2884,6 +3832,7 @@ async function sendMessage() {
 
 
         return;
+
     }
 
 
@@ -2891,6 +3840,7 @@ async function sendMessage() {
 
 
     try {
+
         sendButton.disabled =
             true;
 
@@ -2909,12 +3859,14 @@ async function sendMessage() {
 
                     body:
                         JSON.stringify({
+
                             text:
                                 text,
 
                             replyToId:
                                 currentReplyTo?.id ||
                                 null
+
                         })
                 }
             );
@@ -2925,20 +3877,25 @@ async function sendMessage() {
 
 
         if (
-            response.status === 401
+            response.status ===
+            401
         ) {
+
             window.location.href =
                 "/";
 
             return;
+
         }
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.message ||
                 "Neizdevās nosūtīt ziņu."
             );
+
         }
 
 
@@ -2948,33 +3905,45 @@ async function sendMessage() {
 
         cancelReply();
 
+
         hideMessageError();
+
 
         messageInput.focus();
 
     } catch (error) {
+
         showMessageError(
             error.message
         );
 
     } finally {
+
         sendButton.disabled =
             false;
+
     }
+
 }
 
 
 messageInput.addEventListener(
     "keydown",
     (event) => {
+
         if (
-            event.key === "Enter" &&
+            event.key ===
+                "Enter" &&
             !event.shiftKey
         ) {
+
             event.preventDefault();
 
+
             sendMessage();
+
         }
+
     }
 );
 
@@ -2986,7 +3955,9 @@ messageInput.addEventListener(
 logoutButton.addEventListener(
     "click",
     async () => {
+
         try {
+
             stopTyping();
 
 
@@ -3009,10 +3980,12 @@ logoutButton.addEventListener(
 
 
             if (!response.ok) {
+
                 throw new Error(
                     data.message ||
                     "Neizdevās izrakstīties."
                 );
+
             }
 
 
@@ -3023,6 +3996,7 @@ logoutButton.addEventListener(
                 "/";
 
         } catch (error) {
+
             showMessageError(
                 error.message
             );
@@ -3030,7 +4004,9 @@ logoutButton.addEventListener(
 
             logoutButton.disabled =
                 false;
+
         }
+
     }
 );
 
@@ -3040,43 +4016,70 @@ logoutButton.addEventListener(
 // ==========================================
 
 function showEmptyMessages() {
-    messages.innerHTML = `
-        <p
+
+    messages.innerHTML =
+        `
+        <div
             id="emptyMessages"
-            class="text-secondary text-center my-4"
+            class="chat-empty-state"
         >
-            Ziņu vēl nav.
-        </p>
-    `;
+
+            <div
+                class="chat-empty-icon"
+            >
+                💬
+            </div>
+
+            <h5>
+                Ziņu vēl nav
+            </h5>
+
+            <p
+                class="mb-0"
+            >
+                Sāc sarunu ar sava kursa studentiem.
+            </p>
+
+        </div>
+        `;
+
 }
 
 
 function showEmptyPrivateMessages() {
-    privateMessages.innerHTML = `
+
+    privateMessages.innerHTML =
+        `
         <div
             class="private-empty-message text-secondary text-center my-4"
         >
-            Privāto ziņu vēl nav.
+            Privāto ziņu vēl nav. Uzraksti pirmo ziņu!
         </div>
-    `;
+        `;
+
 }
 
 
 function scrollMessagesToBottom() {
+
     messages.scrollTop =
         messages.scrollHeight;
+
 }
 
 
 function scrollPrivateMessagesToBottom() {
+
     privateMessages.scrollTop =
         privateMessages.scrollHeight;
+
 }
 
 
 function showMessageError(
     message
 ) {
+
     messageError.textContent =
         message;
 
@@ -3084,19 +4087,23 @@ function showMessageError(
     messageError.classList.remove(
         "d-none"
     );
+
 }
 
 
 function hideMessageError() {
+
     messageError.classList.add(
         "d-none"
     );
+
 }
 
 
 function showPrivateMessageError(
     message
 ) {
+
     privateMessageError.textContent =
         message;
 
@@ -3104,22 +4111,23 @@ function showPrivateMessageError(
     privateMessageError.classList.remove(
         "d-none"
     );
+
 }
 
 
 function hidePrivateMessageError() {
+
     privateMessageError.classList.add(
         "d-none"
     );
+
 }
 
 
-/*
- * Šī funkcija tiek izmantota tikai
- * kļūdas teksta drošai ievietošanai HTML,
- * kad tas nepieciešams.
- */
-function escapeText(value) {
+function escapeText(
+    value
+) {
+
     const element =
         document.createElement(
             "div"
@@ -3131,6 +4139,7 @@ function escapeText(value) {
 
 
     return element.innerHTML;
+
 }
 
 
@@ -3139,5 +4148,6 @@ function escapeText(value) {
 // ==========================================
 
 updateUnreadIndicator();
+
 
 initializeChat();

@@ -8,32 +8,32 @@ const Course = require("../models/Course");
 const router = express.Router();
 
 
-// ==========================================
-// AUTH
-// ==========================================
-
 router.use((req, res, next) => {
+
     if (
         !req.session?.userId ||
         !req.session?.courseNumber
     ) {
+
         return res.status(401).json({
             message: "Nepieciešama autorizācija."
         });
+
     }
 
     next();
+
 });
 
 
-// ==========================================
-// HELPERS
-// ==========================================
-
 async function getSessionCourse(req) {
+
     return Course.findOne({
-        number: Number(req.session.courseNumber)
+        number: Number(
+            req.session.courseNumber
+        )
     });
+
 }
 
 
@@ -41,19 +41,31 @@ async function getCourseParticipant(
     courseId,
     userId
 ) {
+
     if (
-        !mongoose.isValidObjectId(userId)
+        !mongoose.isValidObjectId(
+            userId
+        )
     ) {
+
         return null;
+
     }
+
 
     return User.findOne({
         _id: userId,
+
         course: courseId,
+
         passwordHash: {
             $exists: true
         }
-    }).select("_id username");
+    })
+        .select(
+            "_id username"
+        );
+
 }
 
 
@@ -63,44 +75,259 @@ async function getCourseParticipant(
 
 router.get(
     "/users",
+
     async (req, res) => {
+
         try {
+
             const course =
-                await getSessionCourse(req);
+                await getSessionCourse(
+                    req
+                );
+
 
             if (!course) {
-                return res.status(404).json({
-                    message: "Kurss nav atrasts."
-                });
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
+
             }
 
 
             const users =
                 await User.find({
-                    course: course._id,
+                    course:
+                        course._id,
+
                     passwordHash: {
-                        $exists: true
+                        $exists:
+                            true
                     }
                 })
-                    .select("_id username")
+                    .select(
+                        "_id username"
+                    )
                     .sort({
-                        username: 1
+                        username:
+                            1
                     });
 
 
-            res.json(users);
+            res.json(
+                users
+            );
 
         } catch (error) {
+
             console.error(
                 "Dalībnieku iegūšanas kļūda:",
                 error
             );
 
-            res.status(500).json({
-                message:
-                    "Neizdevās iegūt kursa dalībniekus."
-            });
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās iegūt kursa dalībniekus."
+                });
+
         }
+
+    }
+);
+
+
+// ==========================================
+// GET CONVERSATIONS
+// ==========================================
+
+router.get(
+    "/conversations",
+
+    async (req, res) => {
+
+        try {
+
+            const currentUserId =
+                String(
+                    req.session.userId
+                );
+
+
+            const course =
+                await getSessionCourse(
+                    req
+                );
+
+
+            if (!course) {
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
+
+            }
+
+
+            const messages =
+                await DirectMessage.find({
+
+                    course:
+                        course._id,
+
+                    $or: [
+                        {
+                            sender:
+                                currentUserId
+                        },
+
+                        {
+                            recipient:
+                                currentUserId
+                        }
+                    ]
+
+                })
+                    .populate(
+                        "sender",
+                        "username"
+                    )
+                    .populate(
+                        "recipient",
+                        "username"
+                    )
+                    .sort({
+                        createdAt:
+                            -1
+                    });
+
+
+            const conversations =
+                [];
+
+
+            const addedUsers =
+                new Set();
+
+
+            for (
+                const message
+                of messages
+            ) {
+
+                if (
+                    !message.sender ||
+                    !message.recipient
+                ) {
+
+                    continue;
+
+                }
+
+
+                const senderId =
+                    String(
+                        message
+                            .sender
+                            ._id
+                    );
+
+
+                const partner =
+                    senderId ===
+                    currentUserId
+
+                        ? message.recipient
+
+                        : message.sender;
+
+
+                const partnerId =
+                    String(
+                        partner._id
+                    );
+
+
+                if (
+                    addedUsers.has(
+                        partnerId
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+
+                addedUsers.add(
+                    partnerId
+                );
+
+
+                conversations.push({
+
+                    user: {
+                        _id:
+                            partner._id,
+
+                        username:
+                            partner.username
+                    },
+
+
+                    lastMessage: {
+
+                        _id:
+                            message._id,
+
+                        text:
+                            message.text,
+
+                        createdAt:
+                            message.createdAt,
+
+                        senderId:
+                            senderId,
+
+                        isOwn:
+                            senderId ===
+                            currentUserId
+                    }
+
+                });
+
+            }
+
+
+            res.json(
+                conversations
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Sarakstu iegūšanas kļūda:",
+                error
+            );
+
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās iegūt privātās sarakstes."
+                });
+
+        }
+
     }
 );
 
@@ -111,13 +338,21 @@ router.get(
 
 router.get(
     "/:userId",
+
     async (req, res) => {
+
         try {
+
             const currentUserId =
-                String(req.session.userId);
+                String(
+                    req.session.userId
+                );
+
 
             const otherUserId =
-                String(req.params.userId);
+                String(
+                    req.params.userId
+                );
 
 
             if (
@@ -125,10 +360,14 @@ router.get(
                     otherUserId
                 )
             ) {
-                return res.status(400).json({
-                    message:
-                        "Nederīgs lietotāja ID."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Nederīgs lietotāja ID."
+                    });
+
             }
 
 
@@ -136,21 +375,32 @@ router.get(
                 currentUserId ===
                 otherUserId
             ) {
-                return res.status(400).json({
-                    message:
-                        "Nevar atvērt privātu saraksti ar sevi."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Nevar atvērt privātu saraksti ar sevi."
+                    });
+
             }
 
 
             const course =
-                await getSessionCourse(req);
+                await getSessionCourse(
+                    req
+                );
+
 
             if (!course) {
-                return res.status(404).json({
-                    message:
-                        "Kurss nav atrasts."
-                });
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
+
             }
 
 
@@ -162,16 +412,22 @@ router.get(
 
 
             if (!otherUser) {
-                return res.status(404).json({
-                    message:
-                        "Lietotājs šajā kursā nav atrasts."
-                });
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Lietotājs šajā kursā nav atrasts."
+                    });
+
             }
 
 
             const messages =
                 await DirectMessage.find({
-                    course: course._id,
+
+                    course:
+                        course._id,
 
                     $or: [
                         {
@@ -190,6 +446,7 @@ router.get(
                                 currentUserId
                         }
                     ]
+
                 })
                     .populate(
                         "sender",
@@ -200,23 +457,32 @@ router.get(
                         "username"
                     )
                     .sort({
-                        createdAt: 1
+                        createdAt:
+                            1
                     });
 
 
-            res.json(messages);
+            res.json(
+                messages
+            );
 
         } catch (error) {
+
             console.error(
                 "Privāto ziņu iegūšanas kļūda:",
                 error
             );
 
-            res.status(500).json({
-                message:
-                    "Neizdevās iegūt privātās ziņas."
-            });
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās iegūt privātās ziņas."
+                });
+
         }
+
     }
 );
 
@@ -227,13 +493,22 @@ router.get(
 
 router.post(
     "/:userId",
+
     async (req, res) => {
+
         try {
+
             const currentUserId =
-                String(req.session.userId);
+                String(
+                    req.session.userId
+                );
+
 
             const recipientId =
-                String(req.params.userId);
+                String(
+                    req.params.userId
+                );
+
 
             const text =
                 req.body.text?.trim();
@@ -244,10 +519,14 @@ router.post(
                     recipientId
                 )
             ) {
-                return res.status(400).json({
-                    message:
-                        "Nederīgs lietotāja ID."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Nederīgs lietotāja ID."
+                    });
+
             }
 
 
@@ -255,39 +534,58 @@ router.post(
                 currentUserId ===
                 recipientId
             ) {
-                return res.status(400).json({
-                    message:
-                        "Nevar nosūtīt privātu ziņu sev."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Nevar nosūtīt privātu ziņu sev."
+                    });
+
             }
 
 
             if (!text) {
-                return res.status(400).json({
-                    message:
-                        "Ziņa nevar būt tukša."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa nevar būt tukša."
+                    });
+
             }
 
 
             if (
                 text.length > 2000
             ) {
-                return res.status(400).json({
-                    message:
-                        "Ziņa ir pārāk gara."
-                });
+
+                return res
+                    .status(400)
+                    .json({
+                        message:
+                            "Ziņa ir pārāk gara."
+                    });
+
             }
 
 
             const course =
-                await getSessionCourse(req);
+                await getSessionCourse(
+                    req
+                );
+
 
             if (!course) {
-                return res.status(404).json({
-                    message:
-                        "Kurss nav atrasts."
-                });
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Kurss nav atrasts."
+                    });
+
             }
 
 
@@ -299,15 +597,20 @@ router.post(
 
 
             if (!recipient) {
-                return res.status(404).json({
-                    message:
-                        "Lietotājs šajā kursā nav atrasts."
-                });
+
+                return res
+                    .status(404)
+                    .json({
+                        message:
+                            "Lietotājs šajā kursā nav atrasts."
+                    });
+
             }
 
 
             const createdMessage =
                 await DirectMessage.create({
+
                     sender:
                         currentUserId,
 
@@ -319,6 +622,7 @@ router.post(
 
                     text:
                         text
+
                 });
 
 
@@ -340,9 +644,6 @@ router.post(
                 message.toObject();
 
 
-            // Nosūtām abiem lietotājiem.
-            // Ja saņēmējs ir offline,
-            // ziņa tik un tā paliek MongoDB.
             req.io
                 .to(
                     `user-${currentUserId}`
@@ -356,21 +657,29 @@ router.post(
                 );
 
 
-            res.status(201).json(
-                messageData
-            );
+            res
+                .status(201)
+                .json(
+                    messageData
+                );
 
         } catch (error) {
+
             console.error(
                 "Privātās ziņas nosūtīšanas kļūda:",
                 error
             );
 
-            res.status(500).json({
-                message:
-                    "Neizdevās nosūtīt privāto ziņu."
-            });
+
+            res
+                .status(500)
+                .json({
+                    message:
+                        "Neizdevās nosūtīt privāto ziņu."
+                });
+
         }
+
     }
 );
 
