@@ -37,10 +37,21 @@ const usernameDisplay =
         "usernameDisplay"
     );
 
+const profileButton =
+    document.getElementById(
+        "profileButton"
+    );
+
+const changePasswordButton =
+    document.getElementById(
+        "changePasswordButton"
+    );
+
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
+
 
 const messages =
     document.getElementById(
@@ -62,24 +73,19 @@ const messageError =
         "messageError"
     );
 
-const conversationList =
+const searchInput =
     document.getElementById(
-        "conversationList"
+        "searchInput"
     );
 
-const courseUsers =
+const clearSearchButton =
     document.getElementById(
-        "courseUsers"
+        "clearSearchButton"
     );
 
-const onlineUsersCount =
+const searchEmpty =
     document.getElementById(
-        "onlineUsersCount"
-    );
-
-const participantsTabButton =
-    document.getElementById(
-        "participantsTabButton"
+        "searchEmpty"
     );
 
 const typingIndicator =
@@ -117,19 +123,25 @@ const cancelReplyButton =
         "cancelReplyButton"
     );
 
-const searchInput =
+
+const conversationList =
     document.getElementById(
-        "searchInput"
+        "conversationList"
     );
 
-const clearSearchButton =
+const courseUsers =
     document.getElementById(
-        "clearSearchButton"
+        "courseUsers"
     );
 
-const searchEmpty =
+const onlineUsersCount =
     document.getElementById(
-        "searchEmpty"
+        "onlineUsersCount"
+    );
+
+const participantsTabButton =
+    document.getElementById(
+        "participantsTabButton"
     );
 
 
@@ -185,6 +197,103 @@ const privateMessageModal =
 
 
 // ==========================================
+// PROFILE
+// ==========================================
+
+const profileModalElement =
+    document.getElementById(
+        "profileModal"
+    );
+
+const profileAvatar =
+    document.getElementById(
+        "profileAvatar"
+    );
+
+const profileUsername =
+    document.getElementById(
+        "profileUsername"
+    );
+
+const profileCourse =
+    document.getElementById(
+        "profileCourse"
+    );
+
+const profileUsernameValue =
+    document.getElementById(
+        "profileUsernameValue"
+    );
+
+const profileCourseValue =
+    document.getElementById(
+        "profileCourseValue"
+    );
+
+const profileCreatedAt =
+    document.getElementById(
+        "profileCreatedAt"
+    );
+
+
+const profileModal =
+    new bootstrap.Modal(
+        profileModalElement
+    );
+
+
+// ==========================================
+// CHANGE PASSWORD
+// ==========================================
+
+const changePasswordModalElement =
+    document.getElementById(
+        "changePasswordModal"
+    );
+
+const changePasswordForm =
+    document.getElementById(
+        "changePasswordForm"
+    );
+
+const currentPasswordInput =
+    document.getElementById(
+        "currentPasswordInput"
+    );
+
+const newPasswordInput =
+    document.getElementById(
+        "newPasswordInput"
+    );
+
+const confirmPasswordInput =
+    document.getElementById(
+        "confirmPasswordInput"
+    );
+
+const passwordError =
+    document.getElementById(
+        "passwordError"
+    );
+
+const passwordSuccess =
+    document.getElementById(
+        "passwordSuccess"
+    );
+
+const savePasswordButton =
+    document.getElementById(
+        "savePasswordButton"
+    );
+
+
+const changePasswordModal =
+    new bootstrap.Modal(
+        changePasswordModalElement
+    );
+
+
+// ==========================================
 // PRIVATE TOAST
 // ==========================================
 
@@ -223,14 +332,25 @@ const privateMessageToast =
     new bootstrap.Toast(
         privateMessageToastElement,
         {
-            autohide: true,
-            delay: 6000
+            autohide:
+                true,
+
+            delay:
+                6000
         }
     );
 
 
+// ==========================================
+// STATE
+// ==========================================
+
 const basePageTitle =
     "Čats | Student Chat";
+
+
+const GROUP_WINDOW_MS =
+    5 * 60 * 1000;
 
 
 const reactionTypes = [
@@ -249,27 +369,38 @@ const reactionTypes = [
 ];
 
 
-// ==========================================
-// STATE
-// ==========================================
+let currentUserId =
+    null;
 
-let currentUserId = null;
+let currentUsername =
+    null;
 
-let currentUsername = null;
+let currentCourseNumber =
+    null;
 
-let currentCourseNumber = null;
+let currentCourseName =
+    null;
 
-let currentReplyTo = null;
+let currentUserCreatedAt =
+    null;
 
-let typingTimer = null;
+let currentReplyTo =
+    null;
 
-let isTyping = false;
+let typingTimer =
+    null;
 
-let unreadMessageCount = 0;
+let isTyping =
+    false;
 
-let courseParticipants = [];
+let unreadMessageCount =
+    0;
 
-let privateConversations = [];
+let courseParticipants =
+    [];
+
+let privateConversations =
+    [];
 
 let onlineUserIds =
     new Set();
@@ -282,10 +413,12 @@ let toastPrivateUser =
 
 
 // ==========================================
-// HELPERS
+// GENERAL HELPERS
 // ==========================================
 
-function getEntityId(value) {
+function getEntityId(
+    value
+) {
 
     if (!value) {
         return "";
@@ -298,13 +431,16 @@ function getEntityId(value) {
     ) {
 
         return String(
-            value._id || ""
+            value._id ||
+            ""
         );
 
     }
 
 
-    return String(value);
+    return String(
+        value
+    );
 
 }
 
@@ -314,11 +450,13 @@ function getInitial(
 ) {
 
     return String(
-        username || "?"
+        username ||
+        "?"
     )
         .trim()
         .charAt(0)
-        .toUpperCase() || "?";
+        .toUpperCase() ||
+        "?";
 
 }
 
@@ -346,10 +484,30 @@ function createAvatar(
 
 
     avatar.title =
-        username || "";
+        username ||
+        "";
 
 
     return avatar;
+
+}
+
+
+function escapeText(
+    value
+) {
+
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.textContent =
+        value;
+
+
+    return element.innerHTML;
 
 }
 
@@ -364,7 +522,9 @@ function formatConversationTime(
 
 
     const date =
-        new Date(value);
+        new Date(
+            value
+        );
 
 
     const now =
@@ -404,13 +564,295 @@ function formatConversationTime(
 }
 
 
-function isPrivateModalOpen() {
+function getDateKey(
+    value
+) {
 
-    return privateMessageModalElement
-        .classList
-        .contains(
-            "show"
+    const date =
+        new Date(
+            value
         );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "";
+
+    }
+
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        )
+            .padStart(
+                2,
+                "0"
+            );
+
+
+    const day =
+        String(
+            date.getDate()
+        )
+            .padStart(
+                2,
+                "0"
+            );
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+function formatDateLabel(
+    value
+) {
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "";
+
+    }
+
+
+    const today =
+        new Date();
+
+
+    const yesterday =
+        new Date();
+
+
+    yesterday.setDate(
+        today.getDate() - 1
+    );
+
+
+    const dateKey =
+        getDateKey(
+            date
+        );
+
+
+    if (
+        dateKey ===
+        getDateKey(
+            today
+        )
+    ) {
+
+        return "Šodien";
+
+    }
+
+
+    if (
+        dateKey ===
+        getDateKey(
+            yesterday
+        )
+    ) {
+
+        return "Vakar";
+
+    }
+
+
+    const options = {
+        day:
+            "numeric",
+
+        month:
+            "long"
+    };
+
+
+    if (
+        date.getFullYear() !==
+        today.getFullYear()
+    ) {
+
+        options.year =
+            "numeric";
+
+    }
+
+
+    return date.toLocaleDateString(
+        "lv-LV",
+        options
+    );
+
+}
+
+
+function createDateSeparator(
+    createdAt
+) {
+
+    const separator =
+        document.createElement(
+            "div"
+        );
+
+
+    separator.className =
+        "message-date-separator";
+
+
+    separator.dataset.dateKey =
+        getDateKey(
+            createdAt
+        );
+
+
+    const label =
+        document.createElement(
+            "span"
+        );
+
+
+    label.className =
+        "message-date-label";
+
+
+    label.textContent =
+        formatDateLabel(
+            createdAt
+        );
+
+
+    separator.appendChild(
+        label
+    );
+
+
+    return separator;
+
+}
+
+
+function messagesBelongToSameGroup(
+    previousElement,
+    currentElement
+) {
+
+    if (
+        !previousElement ||
+        !currentElement
+    ) {
+
+        return false;
+
+    }
+
+
+    const previousUserId =
+        previousElement
+            .dataset
+            .userId;
+
+
+    const currentUserIdValue =
+        currentElement
+            .dataset
+            .userId;
+
+
+    const previousDateKey =
+        previousElement
+            .dataset
+            .dateKey;
+
+
+    const currentDateKey =
+        currentElement
+            .dataset
+            .dateKey;
+
+
+    const previousTime =
+        new Date(
+            previousElement
+                .dataset
+                .createdAt
+        )
+            .getTime();
+
+
+    const currentTime =
+        new Date(
+            currentElement
+                .dataset
+                .createdAt
+        )
+            .getTime();
+
+
+    if (
+        !previousUserId ||
+        previousUserId !==
+            currentUserIdValue
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        !previousDateKey ||
+        previousDateKey !==
+            currentDateKey
+    ) {
+
+        return false;
+
+    }
+
+
+    if (
+        Number.isNaN(
+            previousTime
+        ) ||
+        Number.isNaN(
+            currentTime
+        )
+    ) {
+
+        return false;
+
+    }
+
+
+    return (
+        currentTime -
+        previousTime >=
+            0 &&
+        currentTime -
+        previousTime <=
+            GROUP_WINDOW_MS
+    );
 
 }
 
@@ -462,6 +904,16 @@ async function initializeChat() {
             );
 
 
+        currentCourseName =
+            data.user.courseName ||
+            `${currentCourseNumber}. kurss`;
+
+
+        currentUserCreatedAt =
+            data.user.createdAt ||
+            null;
+
+
         currentUserAvatar.textContent =
             getInitial(
                 currentUsername
@@ -481,8 +933,7 @@ async function initializeChat() {
 
 
         courseName.textContent =
-            data.user.courseName ||
-            `${currentCourseNumber}. kurss`;
+            currentCourseName;
 
 
         loadingMessage.classList.add(
@@ -533,6 +984,285 @@ async function initializeChat() {
 
 
 // ==========================================
+// PROFILE
+// ==========================================
+
+function openProfile() {
+
+    profileAvatar.textContent =
+        getInitial(
+            currentUsername
+        );
+
+
+    profileAvatar.title =
+        currentUsername ||
+        "";
+
+
+    profileUsername.textContent =
+        currentUsername ||
+        "";
+
+
+    profileCourse.textContent =
+        currentCourseName ||
+        "";
+
+
+    profileUsernameValue.textContent =
+        currentUsername ||
+        "-";
+
+
+    profileCourseValue.textContent =
+        currentCourseName ||
+        "-";
+
+
+    profileCreatedAt.textContent =
+        currentUserCreatedAt
+
+            ? new Date(
+                currentUserCreatedAt
+            )
+                .toLocaleDateString(
+                    "lv-LV",
+                    {
+                        day:
+                            "numeric",
+
+                        month:
+                            "long",
+
+                        year:
+                            "numeric"
+                    }
+                )
+
+            : "-";
+
+
+    profileModal.show();
+
+}
+
+
+profileButton.addEventListener(
+    "click",
+    openProfile
+);
+
+
+changePasswordButton.addEventListener(
+    "click",
+    () => {
+
+        hidePasswordMessages();
+
+
+        changePasswordForm.reset();
+
+
+        changePasswordModal.show();
+
+    }
+);
+
+
+changePasswordModalElement.addEventListener(
+    "shown.bs.modal",
+    () => {
+
+        currentPasswordInput.focus();
+
+    }
+);
+
+
+changePasswordModalElement.addEventListener(
+    "hidden.bs.modal",
+    () => {
+
+        changePasswordForm.reset();
+
+
+        hidePasswordMessages();
+
+    }
+);
+
+
+changePasswordForm.addEventListener(
+    "submit",
+    async (event) => {
+
+        event.preventDefault();
+
+
+        hidePasswordMessages();
+
+
+        const currentPassword =
+            currentPasswordInput.value;
+
+
+        const newPassword =
+            newPasswordInput.value;
+
+
+        const confirmPassword =
+            confirmPasswordInput.value;
+
+
+        if (
+            newPassword.length < 8 ||
+            newPassword.length > 72
+        ) {
+
+            showPasswordError(
+                "Jaunajai parolei jābūt no 8 līdz 72 rakstzīmēm garai."
+            );
+
+
+            return;
+
+        }
+
+
+        if (
+            newPassword !==
+            confirmPassword
+        ) {
+
+            showPasswordError(
+                "Jaunās paroles nesakrīt."
+            );
+
+
+            return;
+
+        }
+
+
+        try {
+
+            savePasswordButton.disabled =
+                true;
+
+
+            const response =
+                await fetch(
+                    "/api/auth/password",
+                    {
+                        method:
+                            "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                currentPassword,
+                                newPassword
+                            })
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (
+                response.status ===
+                401
+            ) {
+
+                window.location.href =
+                    "/";
+
+                return;
+
+            }
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Neizdevās nomainīt paroli."
+                );
+
+            }
+
+
+            passwordSuccess.textContent =
+                data.message ||
+                "Parole veiksmīgi nomainīta.";
+
+
+            passwordSuccess.classList.remove(
+                "d-none"
+            );
+
+
+            changePasswordForm.reset();
+
+        } catch (error) {
+
+            showPasswordError(
+                error.message
+            );
+
+        } finally {
+
+            savePasswordButton.disabled =
+                false;
+
+        }
+
+    }
+);
+
+
+function showPasswordError(
+    message
+) {
+
+    passwordSuccess.classList.add(
+        "d-none"
+    );
+
+
+    passwordError.textContent =
+        message;
+
+
+    passwordError.classList.remove(
+        "d-none"
+    );
+
+}
+
+
+function hidePasswordMessages() {
+
+    passwordError.classList.add(
+        "d-none"
+    );
+
+
+    passwordSuccess.classList.add(
+        "d-none"
+    );
+
+}
+
+
+// ==========================================
 // SOCKET
 // ==========================================
 
@@ -555,7 +1285,9 @@ socket.on(
     "connect",
     () => {
 
-        isTyping = false;
+        isTyping =
+            false;
+
 
         joinSocketCourse();
 
@@ -567,7 +1299,9 @@ socket.on(
     "disconnect",
     () => {
 
-        isTyping = false;
+        isTyping =
+            false;
+
 
         clearTimeout(
             typingTimer
@@ -661,345 +1395,6 @@ async function loadCourseUsers() {
 
 }
 
-
-// ==========================================
-// CONVERSATIONS
-// ==========================================
-
-async function loadConversations() {
-
-    try {
-
-        const response =
-            await fetch(
-                "/api/private-messages/conversations"
-            );
-
-
-        const data =
-            await response.json();
-
-
-        if (
-            response.status ===
-            401
-        ) {
-
-            window.location.href =
-                "/";
-
-            return;
-
-        }
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.message ||
-                "Neizdevās ielādēt sarakstes."
-            );
-
-        }
-
-
-        privateConversations =
-            data.map(
-                (conversation) => ({
-                    user: {
-                        _id:
-                            String(
-                                conversation
-                                    .user
-                                    ._id
-                            ),
-
-                        username:
-                            conversation
-                                .user
-                                .username
-                    },
-
-                    lastMessage:
-                        conversation
-                            .lastMessage
-                })
-            );
-
-
-        renderConversations();
-
-    } catch (error) {
-
-        conversationList.innerHTML =
-            `
-            <div
-                class="list-group-item text-danger py-3"
-            >
-                ${escapeText(error.message)}
-            </div>
-            `;
-
-    }
-
-}
-
-
-function renderConversations() {
-
-    conversationList.innerHTML =
-        "";
-
-
-    if (
-        privateConversations.length ===
-        0
-    ) {
-
-        const empty =
-            document.createElement(
-                "div"
-            );
-
-
-        empty.className =
-            "sidebar-empty-state";
-
-
-        empty.innerHTML =
-            `
-            <div
-                class="sidebar-empty-icon"
-            >
-                💬
-            </div>
-
-            <strong
-                class="d-block mb-1"
-            >
-                Sarakstu vēl nav
-            </strong>
-
-            <div
-                class="small mb-3"
-            >
-                Izvēlies kursa dalībnieku un uzraksti pirmo privāto ziņu.
-            </div>
-            `;
-
-
-        const button =
-            document.createElement(
-                "button"
-            );
-
-
-        button.type =
-            "button";
-
-
-        button.className =
-            "btn btn-sm btn-outline-primary";
-
-
-        button.textContent =
-            "Atvērt dalībniekus";
-
-
-        button.addEventListener(
-            "click",
-            () => {
-
-                bootstrap.Tab
-                    .getOrCreateInstance(
-                        participantsTabButton
-                    )
-                    .show();
-
-            }
-        );
-
-
-        empty.appendChild(
-            button
-        );
-
-
-        conversationList.appendChild(
-            empty
-        );
-
-
-        return;
-
-    }
-
-
-    privateConversations.forEach(
-        (conversation) => {
-
-            const user =
-                conversation.user;
-
-
-            const isOnline =
-                onlineUserIds.has(
-                    user._id
-                );
-
-
-            const item =
-                document.createElement(
-                    "button"
-                );
-
-
-            item.type =
-                "button";
-
-
-            item.className =
-                "list-group-item list-group-item-action conversation-item";
-
-
-            const avatar =
-                createAvatar(
-                    user.username,
-                    isOnline
-                        ? "avatar-online"
-                        : ""
-                );
-
-
-            const main =
-                document.createElement(
-                    "div"
-                );
-
-
-            main.className =
-                "conversation-main";
-
-
-            const top =
-                document.createElement(
-                    "div"
-                );
-
-
-            top.className =
-                "conversation-top";
-
-
-            const name =
-                document.createElement(
-                    "div"
-                );
-
-
-            name.className =
-                "conversation-name";
-
-
-            name.textContent =
-                user.username;
-
-
-            const time =
-                document.createElement(
-                    "span"
-                );
-
-
-            time.className =
-                "conversation-time";
-
-
-            time.textContent =
-                formatConversationTime(
-                    conversation
-                        .lastMessage
-                        ?.createdAt
-                );
-
-
-            top.appendChild(
-                name
-            );
-
-
-            top.appendChild(
-                time
-            );
-
-
-            const preview =
-                document.createElement(
-                    "div"
-                );
-
-
-            preview.className =
-                "conversation-preview";
-
-
-            const prefix =
-                conversation
-                    .lastMessage
-                    ?.isOwn
-                    ? "Tu: "
-                    : "";
-
-
-            preview.textContent =
-                `${prefix}${conversation.lastMessage?.text || ""}`;
-
-
-            main.appendChild(
-                top
-            );
-
-
-            main.appendChild(
-                preview
-            );
-
-
-            item.appendChild(
-                avatar
-            );
-
-
-            item.appendChild(
-                main
-            );
-
-
-            item.addEventListener(
-                "click",
-                () => {
-
-                    openPrivateChat(
-                        user
-                    );
-
-                }
-            );
-
-
-            conversationList.appendChild(
-                item
-            );
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// PARTICIPANTS
-// ==========================================
 
 function renderCourseUsers() {
 
@@ -1164,22 +1559,14 @@ function renderCourseUsers() {
                     : "Bezsaistē";
 
 
-            info.appendChild(
-                name
-            );
-
-
-            info.appendChild(
+            info.append(
+                name,
                 state
             );
 
 
-            item.appendChild(
-                avatar
-            );
-
-
-            item.appendChild(
+            item.append(
+                avatar,
                 info
             );
 
@@ -1258,6 +1645,315 @@ function renderCourseUsers() {
 
 
 // ==========================================
+// CONVERSATIONS
+// ==========================================
+
+async function loadConversations() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/private-messages/conversations"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.status ===
+            401
+        ) {
+
+            window.location.href =
+                "/";
+
+            return;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message ||
+                "Neizdevās ielādēt sarakstes."
+            );
+
+        }
+
+
+        privateConversations =
+            data.map(
+                (conversation) => ({
+                    user: {
+                        _id:
+                            String(
+                                conversation
+                                    .user
+                                    ._id
+                            ),
+
+                        username:
+                            conversation
+                                .user
+                                .username
+                    },
+
+                    lastMessage:
+                        conversation
+                            .lastMessage
+                })
+            );
+
+
+        renderConversations();
+
+    } catch (error) {
+
+        conversationList.innerHTML =
+            `
+            <div
+                class="list-group-item text-danger py-3"
+            >
+                ${escapeText(error.message)}
+            </div>
+            `;
+
+    }
+
+}
+
+
+function renderConversations() {
+
+    conversationList.innerHTML =
+        "";
+
+
+    if (
+        privateConversations.length ===
+        0
+    ) {
+
+        const empty =
+            document.createElement(
+                "div"
+            );
+
+
+        empty.className =
+            "sidebar-empty-state";
+
+
+        empty.innerHTML =
+            `
+            <div class="sidebar-empty-icon">
+                💬
+            </div>
+
+            <strong class="d-block mb-1">
+                Sarakstu vēl nav
+            </strong>
+
+            <div class="small mb-3">
+                Izvēlies kursa dalībnieku un uzraksti pirmo privāto ziņu.
+            </div>
+            `;
+
+
+        const button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.type =
+            "button";
+
+
+        button.className =
+            "btn btn-sm btn-outline-primary";
+
+
+        button.textContent =
+            "Atvērt dalībniekus";
+
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                bootstrap.Tab
+                    .getOrCreateInstance(
+                        participantsTabButton
+                    )
+                    .show();
+
+            }
+        );
+
+
+        empty.appendChild(
+            button
+        );
+
+
+        conversationList.appendChild(
+            empty
+        );
+
+
+        return;
+
+    }
+
+
+    privateConversations.forEach(
+        (conversation) => {
+
+            const user =
+                conversation.user;
+
+
+            const isOnline =
+                onlineUserIds.has(
+                    user._id
+                );
+
+
+            const item =
+                document.createElement(
+                    "button"
+                );
+
+
+            item.type =
+                "button";
+
+
+            item.className =
+                "list-group-item list-group-item-action conversation-item";
+
+
+            const avatar =
+                createAvatar(
+                    user.username,
+                    isOnline
+                        ? "avatar-online"
+                        : ""
+                );
+
+
+            const main =
+                document.createElement(
+                    "div"
+                );
+
+
+            main.className =
+                "conversation-main";
+
+
+            const top =
+                document.createElement(
+                    "div"
+                );
+
+
+            top.className =
+                "conversation-top";
+
+
+            const name =
+                document.createElement(
+                    "div"
+                );
+
+
+            name.className =
+                "conversation-name";
+
+
+            name.textContent =
+                user.username;
+
+
+            const time =
+                document.createElement(
+                    "span"
+                );
+
+
+            time.className =
+                "conversation-time";
+
+
+            time.textContent =
+                formatConversationTime(
+                    conversation
+                        .lastMessage
+                        ?.createdAt
+                );
+
+
+            const preview =
+                document.createElement(
+                    "div"
+                );
+
+
+            preview.className =
+                "conversation-preview";
+
+
+            preview.textContent =
+                `${conversation.lastMessage?.isOwn ? "Tu: " : ""}${conversation.lastMessage?.text || ""}`;
+
+
+            top.append(
+                name,
+                time
+            );
+
+
+            main.append(
+                top,
+                preview
+            );
+
+
+            item.append(
+                avatar,
+                main
+            );
+
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    openPrivateChat(
+                        user
+                    );
+
+                }
+            );
+
+
+            conversationList.appendChild(
+                item
+            );
+
+        }
+    );
+
+}
+
+
+// ==========================================
 // ONLINE USERS
 // ==========================================
 
@@ -1322,9 +2018,7 @@ async function openPrivateChat(
 
     privateMessages.innerHTML =
         `
-        <div
-            class="text-secondary text-center my-4"
-        >
+        <div class="text-secondary text-center my-4">
             Ielādē saraksti...
         </div>
         `;
@@ -1385,10 +2079,6 @@ function updatePrivateChatStatus() {
 
 }
 
-
-// ==========================================
-// LOAD PRIVATE MESSAGES
-// ==========================================
 
 async function loadPrivateMessages(
     userId
@@ -1457,8 +2147,15 @@ async function loadPrivateMessages(
 
 
         data.forEach(
-            addPrivateMessageToChat
+            (message) =>
+                addPrivateMessageToChat(
+                    message,
+                    false
+                )
         );
+
+
+        refreshPrivateMessageLayout();
 
 
         scrollPrivateMessagesToBottom();
@@ -1478,12 +2175,9 @@ async function loadPrivateMessages(
 }
 
 
-// ==========================================
-// ADD PRIVATE MESSAGE
-// ==========================================
-
 function addPrivateMessageToChat(
-    message
+    message,
+    refreshLayout = true
 ) {
 
     if (
@@ -1517,7 +2211,9 @@ function addPrivateMessageToChat(
 
     const senderUsername =
         isOwn
+
             ? currentUsername
+
             : (
                 message.sender
                     ?.username ||
@@ -1539,6 +2235,21 @@ function addPrivateMessageToChat(
 
     row.dataset.privateMessageId =
         message._id;
+
+
+    row.dataset.userId =
+        senderId;
+
+
+    row.dataset.createdAt =
+        message.createdAt ||
+        "";
+
+
+    row.dataset.dateKey =
+        getDateKey(
+            message.createdAt
+        );
 
 
     const avatar =
@@ -1619,35 +2330,23 @@ function addPrivateMessageToChat(
     );
 
 
-    wrapper.appendChild(
-        bubble
-    );
-
-
-    wrapper.appendChild(
+    wrapper.append(
+        bubble,
         time
     );
 
 
     if (isOwn) {
 
-        row.appendChild(
-            wrapper
-        );
-
-
-        row.appendChild(
+        row.append(
+            wrapper,
             avatar
         );
 
     } else {
 
-        row.appendChild(
-            avatar
-        );
-
-
-        row.appendChild(
+        row.append(
+            avatar,
             wrapper
         );
 
@@ -1658,96 +2357,100 @@ function addPrivateMessageToChat(
         row
     );
 
+
+    if (refreshLayout) {
+
+        refreshPrivateMessageLayout();
+
+    }
+
 }
 
 
-// ==========================================
-// PRIVATE TOAST
-// ==========================================
+function refreshPrivateMessageLayout() {
 
-function showPrivateMessageToast(
-    message,
-    sender
-) {
-
-    toastPrivateUser =
-        sender;
-
-
-    privateToastAvatar.textContent =
-        getInitial(
-            sender.username
+    privateMessages
+        .querySelectorAll(
+            ".message-date-separator"
+        )
+        .forEach(
+            (element) =>
+                element.remove()
         );
 
 
-    privateToastUsername.textContent =
-        sender.username;
-
-
-    privateToastText.textContent =
-        message.text;
-
-
-    privateToastTime.textContent =
-        message.createdAt
-            ? new Date(
-                message.createdAt
+    const rows =
+        Array.from(
+            privateMessages.querySelectorAll(
+                ".private-message-row"
             )
-                .toLocaleTimeString(
-                    "lv-LV",
-                    {
-                        hour:
-                            "2-digit",
+        );
 
-                        minute:
-                            "2-digit"
-                    }
+
+    let previousRow =
+        null;
+
+
+    let previousDateKey =
+        null;
+
+
+    rows.forEach(
+        (row) => {
+
+            const dateKey =
+                row.dataset.dateKey;
+
+
+            if (
+                dateKey &&
+                dateKey !==
+                    previousDateKey
+            ) {
+
+                row.before(
+                    createDateSeparator(
+                        row.dataset.createdAt
+                    )
+                );
+
+            }
+
+
+            const continuation =
+                messagesBelongToSameGroup(
+                    previousRow,
+                    row
+                );
+
+
+            row.classList.toggle(
+                "message-group-continuation",
+                continuation
+            );
+
+
+            row
+                .querySelector(
+                    ".user-avatar-private"
                 )
-            : "tagad";
+                ?.classList.toggle(
+                    "avatar-placeholder",
+                    continuation
+                );
 
 
-    privateMessageToast.show();
+            previousRow =
+                row;
 
-}
 
-
-privateToastOpenButton.addEventListener(
-    "click",
-    () => {
-
-        if (
-            !toastPrivateUser
-        ) {
-
-            return;
+            previousDateKey =
+                dateKey;
 
         }
+    );
 
-
-        const user =
-            toastPrivateUser;
-
-
-        privateMessageToast.hide();
-
-
-        openPrivateChat(
-            user
-        );
-
-    }
-);
-
-
-privateMessageToastElement.addEventListener(
-    "hidden.bs.toast",
-    () => {
-
-        toastPrivateUser =
-            null;
-
-    }
-);
+}
 
 
 // ==========================================
@@ -1933,8 +2636,106 @@ privateMessageModalElement.addEventListener(
 
 
 // ==========================================
-// PRIVATE MESSAGE REAL-TIME
+// PRIVATE TOAST
 // ==========================================
+
+function isPrivateModalOpen() {
+
+    return privateMessageModalElement
+        .classList
+        .contains(
+            "show"
+        );
+
+}
+
+
+function showPrivateMessageToast(
+    message,
+    sender
+) {
+
+    toastPrivateUser =
+        sender;
+
+
+    privateToastAvatar.textContent =
+        getInitial(
+            sender.username
+        );
+
+
+    privateToastUsername.textContent =
+        sender.username;
+
+
+    privateToastText.textContent =
+        message.text;
+
+
+    privateToastTime.textContent =
+        message.createdAt
+
+            ? new Date(
+                message.createdAt
+            )
+                .toLocaleTimeString(
+                    "lv-LV",
+                    {
+                        hour:
+                            "2-digit",
+
+                        minute:
+                            "2-digit"
+                    }
+                )
+
+            : "tagad";
+
+
+    privateMessageToast.show();
+
+}
+
+
+privateToastOpenButton.addEventListener(
+    "click",
+    () => {
+
+        if (
+            !toastPrivateUser
+        ) {
+
+            return;
+
+        }
+
+
+        const user =
+            toastPrivateUser;
+
+
+        privateMessageToast.hide();
+
+
+        openPrivateChat(
+            user
+        );
+
+    }
+);
+
+
+privateMessageToastElement.addEventListener(
+    "hidden.bs.toast",
+    () => {
+
+        toastPrivateUser =
+            null;
+
+    }
+);
+
 
 socket.on(
     "privateMessage",
@@ -1976,9 +2777,8 @@ socket.on(
 
 
         if (
-            currentPrivateUser &&
-            currentPrivateUser._id ===
-                partnerId
+            currentPrivateUser?._id ===
+            partnerId
         ) {
 
             addPrivateMessageToChat(
@@ -1990,13 +2790,6 @@ socket.on(
 
         }
 
-
-        /*
-         * Toast tiek parādīts tikai tad,
-         * ja ziņu nosūtīja cits lietotājs
-         * un sarakste ar viņu pašlaik
-         * nav atvērta.
-         */
 
         if (!isOwnMessage) {
 
@@ -2011,20 +2804,17 @@ socket.on(
                 !sameConversationOpen
             ) {
 
-                const sender = {
-                    _id:
-                        senderId,
-
-                    username:
-                        message.sender
-                            ?.username ||
-                        "Lietotājs"
-                };
-
-
                 showPrivateMessageToast(
                     message,
-                    sender
+                    {
+                        _id:
+                            senderId,
+
+                        username:
+                            message.sender
+                                ?.username ||
+                            "Lietotājs"
+                    }
                 );
 
             }
@@ -2237,7 +3027,8 @@ function startTyping() {
         );
 
 
-        isTyping = true;
+        isTyping =
+            true;
 
     }
 
@@ -2275,7 +3066,8 @@ function stopTyping() {
     }
 
 
-    isTyping = false;
+    isTyping =
+        false;
 
 }
 
@@ -2308,10 +3100,6 @@ messageInput.addEventListener(
     stopTyping
 );
 
-
-// ==========================================
-// TYPING USERS
-// ==========================================
 
 socket.on(
     "typingUsers",
@@ -2379,7 +3167,7 @@ socket.on(
 
 
 // ==========================================
-// LOAD GENERAL MESSAGES
+// GENERAL MESSAGES: LOAD / GROUP / DATES
 // ==========================================
 
 async function loadMessages() {
@@ -2436,8 +3224,15 @@ async function loadMessages() {
 
 
         data.forEach(
-            addMessageToChat
+            (message) =>
+                addMessageToChat(
+                    message,
+                    false
+                )
         );
+
+
+        refreshGeneralMessageLayout();
 
 
         applyMessageSearch();
@@ -2459,12 +3254,9 @@ async function loadMessages() {
 }
 
 
-// ==========================================
-// ADD GENERAL MESSAGE
-// ==========================================
-
 function addMessageToChat(
-    message
+    message,
+    refreshLayout = true
 ) {
 
     if (
@@ -2485,16 +3277,22 @@ function addMessageToChat(
         ?.remove();
 
 
-    const isOwn =
+    const userId =
         getEntityId(
             message.user
-        ) ===
+        );
+
+
+    const isOwn =
+        userId ===
         currentUserId;
 
 
     const messageUsername =
         isOwn
+
             ? currentUsername
+
             : (
                 message.user
                     ?.username ||
@@ -2522,7 +3320,23 @@ function addMessageToChat(
 
     messageElement.dataset.username =
         message.user?.username ||
+        currentUsername ||
         "";
+
+
+    messageElement.dataset.userId =
+        userId;
+
+
+    messageElement.dataset.createdAt =
+        message.createdAt ||
+        "";
+
+
+    messageElement.dataset.dateKey =
+        getDateKey(
+            message.createdAt
+        );
 
 
     messageElement.addEventListener(
@@ -2624,12 +3438,8 @@ function addMessageToChat(
     }
 
 
-    info.appendChild(
-        username
-    );
-
-
-    info.appendChild(
+    info.append(
+        username,
         time
     );
 
@@ -2698,12 +3508,8 @@ function addMessageToChat(
             "Ziņa nav pieejama";
 
 
-        replyElement.appendChild(
-            replyUser
-        );
-
-
-        replyElement.appendChild(
+        replyElement.append(
+            replyUser,
             replyMessageText
         );
 
@@ -2775,14 +3581,11 @@ function addMessageToChat(
         "message-actions";
 
 
-    actions.appendChild(
+    actions.append(
         createReactionMenu(
             message._id
-        )
-    );
+        ),
 
-
-    actions.appendChild(
         createActionMenu(
             message,
             messageElement,
@@ -2798,23 +3601,15 @@ function addMessageToChat(
 
     if (isOwn) {
 
-        messageElement.appendChild(
-            wrapper
-        );
-
-
-        messageElement.appendChild(
+        messageElement.append(
+            wrapper,
             avatar
         );
 
     } else {
 
-        messageElement.appendChild(
-            avatar
-        );
-
-
-        messageElement.appendChild(
+        messageElement.append(
+            avatar,
             wrapper
         );
 
@@ -2828,7 +3623,183 @@ function addMessageToChat(
 
     renderReactions(
         messageElement,
-        message.reactions || []
+        message.reactions ||
+        []
+    );
+
+
+    if (refreshLayout) {
+
+        refreshGeneralMessageLayout();
+
+    }
+
+}
+
+
+function refreshGeneralMessageLayout() {
+
+    messages
+        .querySelectorAll(
+            ".message-date-separator"
+        )
+        .forEach(
+            (element) =>
+                element.remove()
+        );
+
+
+    const messageElements =
+        Array.from(
+            messages.querySelectorAll(
+                ".chat-message"
+            )
+        );
+
+
+    let previousMessage =
+        null;
+
+
+    let previousDateKey =
+        null;
+
+
+    messageElements.forEach(
+        (messageElement) => {
+
+            const dateKey =
+                messageElement
+                    .dataset
+                    .dateKey;
+
+
+            if (
+                dateKey &&
+                dateKey !==
+                    previousDateKey
+            ) {
+
+                messageElement.before(
+                    createDateSeparator(
+                        messageElement
+                            .dataset
+                            .createdAt
+                    )
+                );
+
+            }
+
+
+            const continuation =
+                messagesBelongToSameGroup(
+                    previousMessage,
+                    messageElement
+                );
+
+
+            messageElement.classList.toggle(
+                "message-group-continuation",
+                continuation
+            );
+
+
+            messageElement
+                .querySelector(
+                    ".user-avatar-message"
+                )
+                ?.classList.toggle(
+                    "avatar-placeholder",
+                    continuation
+                );
+
+
+            messageElement
+                .querySelector(
+                    ".message-username"
+                )
+                ?.classList.toggle(
+                    "d-none",
+                    continuation
+                );
+
+
+            previousMessage =
+                messageElement;
+
+
+            previousDateKey =
+                dateKey;
+
+        }
+    );
+
+
+    updateDateSeparatorVisibility();
+
+}
+
+
+function updateDateSeparatorVisibility() {
+
+    const separators =
+        Array.from(
+            messages.querySelectorAll(
+                ".message-date-separator"
+            )
+        );
+
+
+    separators.forEach(
+        (separator) => {
+
+            let element =
+                separator
+                    .nextElementSibling;
+
+
+            let hasVisibleMessage =
+                false;
+
+
+            while (
+                element &&
+                !element.classList.contains(
+                    "message-date-separator"
+                )
+            ) {
+
+                if (
+                    element.classList.contains(
+                        "chat-message"
+                    ) &&
+                    !element.classList.contains(
+                        "d-none"
+                    )
+                ) {
+
+                    hasVisibleMessage =
+                        true;
+
+
+                    break;
+
+                }
+
+
+                element =
+                    element
+                        .nextElementSibling;
+
+            }
+
+
+            separator.classList.toggle(
+                "d-none",
+                !hasVisibleMessage
+            );
+
+        }
     );
 
 }
@@ -2918,9 +3889,11 @@ function createActionMenu(
 
             startReply(
                 message._id,
+
                 messageElement
                     .dataset
                     .username,
+
                 messageElement
                     .dataset
                     .messageText
@@ -2972,6 +3945,7 @@ function createActionMenu(
 
                 editMessage(
                     message._id,
+
                     messageElement
                         .dataset
                         .messageText
@@ -3054,12 +4028,8 @@ function createActionMenu(
     }
 
 
-    dropdown.appendChild(
-        button
-    );
-
-
-    dropdown.appendChild(
+    dropdown.append(
+        button,
         menu
     );
 
@@ -3070,7 +4040,7 @@ function createActionMenu(
 
 
 // ==========================================
-// REACTION MENU
+// REACTIONS
 // ==========================================
 
 function createReactionMenu(
@@ -3193,12 +4163,8 @@ function createReactionMenu(
     );
 
 
-    dropdown.appendChild(
-        menuButton
-    );
-
-
-    dropdown.appendChild(
+    dropdown.append(
+        menuButton,
         menu
     );
 
@@ -3207,10 +4173,6 @@ function createReactionMenu(
 
 }
 
-
-// ==========================================
-// RENDER REACTIONS
-// ==========================================
 
 function renderReactions(
     messageElement,
@@ -3292,6 +4254,7 @@ function renderReactions(
                         messageElement
                             .dataset
                             .messageId,
+
                         reactionType
                     );
 
@@ -3308,10 +4271,6 @@ function renderReactions(
 
 }
 
-
-// ==========================================
-// TOGGLE REACTION
-// ==========================================
 
 async function toggleReaction(
     messageId,
@@ -3398,7 +4357,8 @@ function applyMessageSearch() {
         );
 
 
-    let visibleMessages = 0;
+    let visibleMessages =
+        0;
 
 
     messageElements.forEach(
@@ -3434,7 +4394,9 @@ function applyMessageSearch() {
 
 
             if (matches) {
+
                 visibleMessages++;
+
             }
 
         }
@@ -3445,9 +4407,14 @@ function applyMessageSearch() {
         "d-none",
 
         searchValue === "" ||
-        messageElements.length === 0 ||
-        visibleMessages > 0
+        messageElements.length ===
+            0 ||
+        visibleMessages >
+            0
     );
+
+
+    updateDateSeparatorVisibility();
 
 }
 
@@ -3490,6 +4457,7 @@ function startReply(
             messageId,
 
         username,
+
         text
     };
 
@@ -3514,7 +4482,8 @@ function startReply(
 
 function cancelReply() {
 
-    currentReplyTo = null;
+    currentReplyTo =
+        null;
 
 
     replyUsername.textContent =
@@ -3537,10 +4506,6 @@ cancelReplyButton.addEventListener(
     cancelReply
 );
 
-
-// ==========================================
-// EDITED
-// ==========================================
 
 function addEditedLabel(
     textElement
@@ -3575,7 +4540,7 @@ function addEditedLabel(
 
 
 // ==========================================
-// EDIT
+// EDIT / DELETE
 // ==========================================
 
 async function editMessage(
@@ -3678,10 +4643,6 @@ async function editMessage(
 }
 
 
-// ==========================================
-// DELETE
-// ==========================================
-
 async function deleteMessage(
     messageId
 ) {
@@ -3769,7 +4730,9 @@ socket.on(
 
             scrollMessagesToBottom();
 
+
             clearUnreadMessages();
+
 
             return;
 
@@ -3782,6 +4745,7 @@ socket.on(
         ) {
 
             addUnreadMessage();
+
 
             return;
 
@@ -3884,7 +4848,8 @@ socket.on(
 
             renderReactions(
                 messageElement,
-                data.reactions || []
+                data.reactions ||
+                []
             );
 
         }
@@ -3941,6 +4906,10 @@ socket.on(
 
             showEmptyMessages();
 
+        } else {
+
+            refreshGeneralMessageLayout();
+
         }
 
 
@@ -3951,7 +4920,7 @@ socket.on(
 
 
 // ==========================================
-// SEND GENERAL
+// SEND GENERAL MESSAGE
 // ==========================================
 
 sendButton.addEventListener(
@@ -4263,25 +5232,6 @@ function hidePrivateMessageError() {
     privateMessageError.classList.add(
         "d-none"
     );
-
-}
-
-
-function escapeText(
-    value
-) {
-
-    const element =
-        document.createElement(
-            "div"
-        );
-
-
-    element.textContent =
-        value;
-
-
-    return element.innerHTML;
 
 }
 

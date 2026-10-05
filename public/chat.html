@@ -49,32 +49,88 @@
         </a>
 
 
+        <!-- USER MENU -->
+
         <div
-            class="d-flex align-items-center gap-2 ms-auto"
+            class="dropdown ms-auto"
         >
 
-            <div
-                id="currentUserAvatar"
-                class="user-avatar user-avatar-navbar"
-            >
-                ?
-            </div>
-
-
-            <span
-                id="usernameDisplay"
-                class="text-white fw-semibold small"
-            >
-            </span>
-
-
             <button
-                id="logoutButton"
+                class="btn btn-dark user-menu-button dropdown-toggle d-flex align-items-center gap-2"
                 type="button"
-                class="btn btn-outline-light btn-sm ms-2"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
             >
-                Iziet
+
+                <div
+                    id="currentUserAvatar"
+                    class="user-avatar user-avatar-navbar"
+                >
+                    ?
+                </div>
+
+
+                <span
+                    id="usernameDisplay"
+                    class="fw-semibold small"
+                >
+                </span>
+
             </button>
+
+
+            <ul
+                class="dropdown-menu dropdown-menu-end shadow-sm user-dropdown-menu"
+            >
+
+                <li>
+
+                    <button
+                        id="profileButton"
+                        class="dropdown-item"
+                        type="button"
+                    >
+                        Mans profils
+                    </button>
+
+                </li>
+
+
+                <li>
+
+                    <button
+                        id="changePasswordButton"
+                        class="dropdown-item"
+                        type="button"
+                    >
+                        Mainīt paroli
+                    </button>
+
+                </li>
+
+
+                <li>
+
+                    <hr
+                        class="dropdown-divider"
+                    >
+
+                </li>
+
+
+                <li>
+
+                    <button
+                        id="logoutButton"
+                        class="dropdown-item text-danger"
+                        type="button"
+                    >
+                        Iziet
+                    </button>
+
+                </li>
+
+            </ul>
 
         </div>
 
@@ -446,7 +502,6 @@
                         class="tab-content sidebar-content"
                     >
 
-                        <!-- CONVERSATIONS -->
 
                         <div
                             id="conversationsPane"
@@ -469,8 +524,6 @@
 
                         </div>
 
-
-                        <!-- PARTICIPANTS -->
 
                         <div
                             id="participantsPane"
@@ -506,7 +559,9 @@
 </div>
 
 
-<!-- PRIVATE MESSAGE MODAL -->
+<!-- ======================================
+     PRIVATE MESSAGE MODAL
+     ====================================== -->
 
 <div
     class="modal fade"
@@ -626,6 +681,327 @@
                 </div>
 
             </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================
+     PROFILE MODAL
+     ====================================== -->
+
+<div
+    class="modal fade"
+    id="profileModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div
+        class="modal-dialog modal-dialog-centered"
+    >
+
+        <div
+            class="modal-content"
+        >
+
+            <div
+                class="modal-header"
+            >
+
+                <h5
+                    class="modal-title"
+                >
+                    Mans profils
+                </h5>
+
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Aizvērt"
+                >
+                </button>
+
+            </div>
+
+
+            <div
+                class="modal-body"
+            >
+
+                <div
+                    class="profile-header text-center mb-4"
+                >
+
+                    <div
+                        id="profileAvatar"
+                        class="user-avatar profile-avatar mx-auto mb-2"
+                    >
+                        ?
+                    </div>
+
+
+                    <h4
+                        id="profileUsername"
+                        class="mb-1"
+                    >
+                    </h4>
+
+
+                    <div
+                        id="profileCourse"
+                        class="text-secondary"
+                    >
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="profile-info-card"
+                >
+
+                    <div
+                        class="profile-info-row"
+                    >
+
+                        <span
+                            class="text-secondary"
+                        >
+                            Lietotājvārds
+                        </span>
+
+
+                        <strong
+                            id="profileUsernameValue"
+                        >
+                        </strong>
+
+                    </div>
+
+
+                    <div
+                        class="profile-info-row"
+                    >
+
+                        <span
+                            class="text-secondary"
+                        >
+                            Kurss
+                        </span>
+
+
+                        <strong
+                            id="profileCourseValue"
+                        >
+                        </strong>
+
+                    </div>
+
+
+                    <div
+                        class="profile-info-row"
+                    >
+
+                        <span
+                            class="text-secondary"
+                        >
+                            Konts izveidots
+                        </span>
+
+
+                        <strong
+                            id="profileCreatedAt"
+                        >
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ======================================
+     CHANGE PASSWORD MODAL
+     ====================================== -->
+
+<div
+    class="modal fade"
+    id="changePasswordModal"
+    tabindex="-1"
+    aria-hidden="true"
+>
+
+    <div
+        class="modal-dialog modal-dialog-centered"
+    >
+
+        <div
+            class="modal-content"
+        >
+
+            <div
+                class="modal-header"
+            >
+
+                <h5
+                    class="modal-title"
+                >
+                    Mainīt paroli
+                </h5>
+
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Aizvērt"
+                >
+                </button>
+
+            </div>
+
+
+            <form
+                id="changePasswordForm"
+            >
+
+                <div
+                    class="modal-body"
+                >
+
+                    <div
+                        class="mb-3"
+                    >
+
+                        <label
+                            for="currentPasswordInput"
+                            class="form-label"
+                        >
+                            Pašreizējā parole
+                        </label>
+
+
+                        <input
+                            id="currentPasswordInput"
+                            type="password"
+                            class="form-control"
+                            autocomplete="current-password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        class="mb-3"
+                    >
+
+                        <label
+                            for="newPasswordInput"
+                            class="form-label"
+                        >
+                            Jaunā parole
+                        </label>
+
+
+                        <input
+                            id="newPasswordInput"
+                            type="password"
+                            class="form-control"
+                            minlength="8"
+                            maxlength="72"
+                            autocomplete="new-password"
+                            required
+                        >
+
+
+                        <div
+                            class="form-text"
+                        >
+                            Vismaz 8 rakstzīmes.
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="mb-3"
+                    >
+
+                        <label
+                            for="confirmPasswordInput"
+                            class="form-label"
+                        >
+                            Atkārto jauno paroli
+                        </label>
+
+
+                        <input
+                            id="confirmPasswordInput"
+                            type="password"
+                            class="form-control"
+                            minlength="8"
+                            maxlength="72"
+                            autocomplete="new-password"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div
+                        id="passwordError"
+                        class="alert alert-danger d-none mb-0"
+                    >
+                    </div>
+
+
+                    <div
+                        id="passwordSuccess"
+                        class="alert alert-success d-none mb-0"
+                    >
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="modal-footer"
+                >
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Atcelt
+                    </button>
+
+
+                    <button
+                        id="savePasswordButton"
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Saglabāt
+                    </button>
+
+                </div>
+
+            </form>
 
         </div>
 
