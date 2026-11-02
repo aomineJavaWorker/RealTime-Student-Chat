@@ -10,15 +10,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/3PT-2024/Full-stack-Denisenko.git"
+    "url": "git+https://github.com/aomineJavaWorker/RealTime-Student-Chat.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/3PT-2024/Full-stack-Denisenko/issues"
+  "url": "https://github.com/aomineJavaWorker/RealTime-Student-Chat/issues"
   },
-  "homepage": "https://github.com/3PT-2024/Full-stack-Denisenko#readme",
+  "homepage": "https://github.com/aomineJavaWorker/RealTime-Student-Chat#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "connect-mongo": "^6.0.0",
