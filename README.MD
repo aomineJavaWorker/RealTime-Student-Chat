@@ -346,13 +346,13 @@ Full-stack-Denisenko/
 Atvērt termināli un izpildīt:
 
 ~~~bash
-git clone https://github.com/3PT-2024/Full-stack-Denisenko.git
+git clone https://github.com/aomineJavaWorker/RealTime-Student-Chat.git
 ~~~
 
 Pāriet uz projekta mapi:
 
 ~~~bash
-cd Full-stack-Denisenko
+cd RealTime-Student-Chat
 ~~~
 
 ---
