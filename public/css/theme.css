@@ -1,0 +1,95 @@
+/* Shared tokens. Load after Bootstrap and before page-specific styles. */
+:root,
+[data-bs-theme="light"] {
+    color-scheme: light;
+    --app-primary: #2563eb;
+    --app-accent: #2563eb;
+    --app-accent-hover: #1d4ed8;
+    --app-text: #17253e;
+    --app-muted: #5d6c83;
+    --app-background: #f3f6fb;
+    --app-glow: #e8efff;
+    --app-surface: #fff;
+    --app-soft: #eff4ff;
+    --app-border: #dce4ef;
+    --app-divider: #e8edf4;
+    --app-input: #fcfdff;
+    --app-input-border: #c8d3e2;
+    --app-input-hover: #91a7c7;
+    --app-placeholder: #637188;
+    --app-focus: #2563eb;
+    --app-focus-ring: #2563eb1f;
+    --app-danger: #922d2d;
+    --app-danger-bg: #fff3f3;
+    --app-danger-border: #f2caca;
+    --app-danger-accent: #c24141;
+    --app-shadow: 0 16px 48px -20px #223e7133, 0 2px 6px #223e7105;
+}
+
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --app-accent: #8ab4ff;
+    --app-accent-hover: #b9d2ff;
+    --app-text: #e8eef8;
+    --app-muted: #afbdd2;
+    --app-background: #0f172a;
+    --app-glow: #17284a;
+    --app-surface: #192438;
+    --app-soft: #233453;
+    --app-border: #34435b;
+    --app-divider: #2c3b53;
+    --app-input: #121e32;
+    --app-input-border: #465873;
+    --app-input-hover: #758caa;
+    --app-placeholder: #a1b2ca;
+    --app-focus: #8ab4ff;
+    --app-focus-ring: #8ab4ff30;
+    --app-danger: #ffc1c1;
+    --app-danger-bg: #3b222e;
+    --app-danger-border: #794052;
+    --app-danger-accent: #f0909b;
+    --app-shadow: 0 16px 48px -20px #060e2099, 0 2px 6px #060e2033;
+}
+
+.theme-toggle {
+    display: inline-grid;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--app-border);
+    border-radius: 11px;
+    color: var(--app-text);
+    background: var(--app-surface);
+    cursor: pointer;
+}
+
+.theme-toggle[hidden] {
+    display: none;
+}
+
+.theme-toggle:hover {
+    color: var(--app-accent);
+    border-color: var(--app-input-hover);
+    background: var(--app-soft);
+}
+
+.theme-toggle:focus-visible {
+    outline: 3px solid var(--app-focus);
+    outline-offset: 3px;
+}
+
+.theme-toggle svg {
+    width: 21px;
+    height: 21px;
+}
+
+.theme-icon-sun,
+[data-bs-theme="dark"] .theme-icon-moon {
+    display: none;
+}
+
+[data-bs-theme="dark"] .theme-icon-sun {
+    display: block;
+}

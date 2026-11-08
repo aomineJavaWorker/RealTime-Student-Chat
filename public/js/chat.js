@@ -1639,7 +1639,7 @@ function renderCourseUsers() {
 
 
     onlineUsersCount.textContent =
-        `${onlineUserIds.size} online`;
+        `${onlineUserIds.size} tiešsaistē`;
 
 }
 
@@ -2010,7 +2010,7 @@ async function openPrivateChat(
 
 
     privateChatUsername.textContent =
-        `Privāta sarakste ar ${user.username}`;
+        `Privātā sarakste: ${user.username}`;
 
 
     updatePrivateChatStatus();
@@ -3847,6 +3847,7 @@ function createActionMenu(
 
     button.textContent =
         "⋯";
+    button.setAttribute("aria-label", "Ziņas darbības");
 
 
     const menu =
@@ -4079,6 +4080,7 @@ function createReactionMenu(
 
     menuButton.textContent =
         "😊";
+    menuButton.setAttribute("aria-label", "Pievienot reakciju");
 
 
     const menu =
