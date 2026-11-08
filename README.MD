@@ -1,10 +1,38 @@
 # Student Chat
 
+**Tiešsaistes demonstrācija:** https://realtime-student-chat.onrender.com
+
 Student Chat ir pilna steka tīmekļa lietotne studentu savstarpējai saziņai.
 
 Lietotāji var reģistrēties, izvēlēties savu kursu, pieslēgties sistēmai un sazināties ar citiem sava kursa studentiem kopējā čatā vai privātās sarakstēs.
 
 Ziņas tiek saglabātas MongoDB datubāzē, bet reāllaika saziņa tiek nodrošināta ar Socket.IO.
+
+---
+
+## Demonstrācija
+
+**Darbojošā vietne:** [Student Chat](https://realtime-student-chat.onrender.com)
+
+Var reģistrēties, izvēlēties kursu, piedalīties kopējā čatā, rakstīt privātas ziņas un izmantot ziņojumu reakcijas.
+
+> Bezmaksas Render pakalpojuma dēļ vietnes pirmā ielāde pēc neaktivitātes var aizņemt ilgāku laiku.
+
+## Ekrānuzņēmumi
+
+### Pieslēgšanās un reģistrācija
+
+| Pieslēgšanās (tumšā tēma) | Reģistrācija (gaišā tēma) |
+|:---:|:---:|
+| <img src="docs/images/login-dark.png" alt="Student Chat pieslēgšanās lapa tumšajā tēmā" width="420"> | <img src="docs/images/register-light.png" alt="Student Chat reģistrācijas lapa gaišajā tēmā" width="420"> |
+
+### Kopējais čats (gaišā tēma)
+
+<img src="docs/images/chat-light.png" alt="Student Chat kopējais čats ar ziņām, reakcijām un privāto sarakstu paneli" width="760">
+
+### Privātā sarakste (tumšā tēma)
+
+<img src="docs/images/private-chat-dark.png" alt="Student Chat privātās sarakstes logs tumšajā tēmā" width="760">
 
 ---
 
@@ -77,7 +105,7 @@ Projekta mērķis ir izveidot vienkāršu, ērtu un responsīvu studentu saziņa
 ### Lietotāji tiešsaistē
 
 - Tiešsaistes lietotāju saraksts
-- Lietotāja online/offline statuss
+- Lietotāja tiešsaistes/bezsaistes statuss
 - Lietotāji redz tikai sava kursa dalībniekus
 
 ### Privātās ziņas
@@ -90,11 +118,14 @@ Projekta mērķis ir izveidot vienkāršu, ērtu un responsīvu studentu saziņa
 
 ### Dizains
 
+- Gaišā un tumšā tēma ar izvēles saglabāšanu
+- Animēta pārslēgšanās starp pieslēgšanos un reģistrāciju
+
 - Bootstrap komponentes
 - Responsīvs dizains
 - Atsevišķs izkārtojums mobilajām ierīcēm
 - Savu un citu lietotāju ziņu vizuāla atdalīšana
-- Chat bubbles
+- Ziņojumu burbuļi
 - Modālais logs privātajām ziņām
 - Interaktīvas pogas un izvēlnes
 
@@ -301,20 +332,31 @@ Datu apmaiņai bez lapas pārlādes tiek izmantoti:
 ## Projekta struktūra
 
 ~~~text
-Full-stack-Denisenko/
+RealTime-Student-Chat/
 │
 ├── public/
 │   ├── css/
-│   │   └── style.css
+│   │   ├── auth.css
+│   │   ├── style.css
+│   │   └── theme.css
 │   │
 │   ├── js/
 │   │   ├── app.js
+│   │   ├── auth-ui.js
 │   │   ├── chat.js
-│   │   └── register.js
+│   │   ├── register.js
+│   │   └── theme.js
 │   │
 │   ├── index.html
 │   ├── register.html
 │   └── chat.html
+│
+├── docs/
+│   └── images/
+│       ├── login-dark.png
+│       ├── register-light.png
+│       ├── chat-light.png
+│       └── private-chat-dark.png
 │
 ├── src/
 │   ├── models/
