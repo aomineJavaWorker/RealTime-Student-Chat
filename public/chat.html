@@ -8,8 +8,11 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1"
+        content="width=device-width, initial-scale=1, interactive-widget=resizes-content"
     >
+
+    <meta name="theme-color" content="#f3f6fb">
+    <script src="js/theme.js"></script>
 
     <title>
         Čats | Student Chat
@@ -22,6 +25,8 @@
     >
 
 
+    <link rel="stylesheet" href="css/theme.css">
+
     <link
         rel="stylesheet"
         href="css/style.css"
@@ -30,11 +35,14 @@
 </head>
 
 
-<body>
+<body class="chat-page">
+
+<a class="chat-skip-link" href="#messageInput">Pāriet uz ziņas ievadi</a>
 
 
 <nav
-    class="navbar navbar-dark bg-dark shadow-sm"
+    class="navbar navbar-dark bg-dark shadow-sm chat-navbar"
+    aria-label="Galvenā navigācija"
 >
 
     <div
@@ -42,12 +50,18 @@
     >
 
         <a
-            class="navbar-brand fw-semibold"
+            class="navbar-brand fw-semibold chat-brand"
             href="/chat.html"
         >
+            <span class="chat-brand-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H4l1.8-3.6A7.5 7.5 0 1 1 20 11.5Z"/><path d="M8 10h8M8 13.5h5"/></svg></span>
             Student Chat
         </a>
 
+
+        <button type="button" class="theme-toggle ms-auto" data-theme-toggle aria-label="Ieslēgt tumšo tēmu" hidden>
+            <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg>
+            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 13.3A8.5 8.5 0 0 1 10.7 3.5a8.5 8.5 0 1 0 9.8 9.8Z"/></svg>
+        </button>
 
         <!-- USER MENU -->
 
@@ -59,6 +73,7 @@
                 class="btn btn-dark user-menu-button dropdown-toggle d-flex align-items-center gap-2"
                 type="button"
                 data-bs-toggle="dropdown"
+                aria-label="Lietotāja izvēlne"
                 aria-expanded="false"
             >
 
@@ -140,9 +155,15 @@
 
 
 <div
-    class="container my-4"
+    class="container my-4 chat-layout"
+    role="main"
 >
 
+
+    <nav class="chat-mobile-links d-lg-none" aria-label="Čata sadaļas">
+        <a href="#chatTitle">Čats</a>
+        <a href="#communicationPanel">Saziņa</a>
+    </nav>
 
     <div
         id="loadingMessage"
@@ -211,6 +232,8 @@
                             <input
                                 type="text"
                                 id="searchInput"
+
+                                aria-label="Meklēt ziņas vai lietotāju"
                                 class="form-control"
                                 placeholder="Meklēt ziņas vai lietotāju..."
                             >
@@ -239,6 +262,8 @@
 
                         <div
                             id="messages"
+
+                            role="region" aria-label="Kursa ziņojumi" tabindex="0"
                             class="messages-container mb-2"
                         >
 
@@ -309,6 +334,8 @@
 
                         <div
                             id="typingIndicator"
+
+                            role="status" aria-live="polite"
                             class="typing-indicator text-secondary small mb-2 d-none"
                         >
                         </div>
@@ -377,6 +404,8 @@
                             <input
                                 type="text"
                                 id="messageInput"
+
+                                aria-label="Ziņas teksts"
                                 class="form-control"
                                 maxlength="2000"
                                 placeholder="Raksti ziņu..."
@@ -396,6 +425,8 @@
 
                         <div
                             id="messageError"
+
+                            role="alert" aria-atomic="true"
                             class="alert alert-danger d-none mt-3 mb-0"
                         >
                         </div>
@@ -415,6 +446,8 @@
 
                 <div
                     class="card shadow-sm sidebar-card"
+                    id="communicationPanel"
+                    tabindex="-1"
                 >
 
                     <div
@@ -445,7 +478,7 @@
                                 id="onlineUsersCount"
                                 class="badge text-bg-success"
                             >
-                                0 online
+                                0 tiešsaistē
                             </span>
 
                         </div>
@@ -463,6 +496,8 @@
 
                                 <button
                                     id="conversationsTabButton"
+
+                                    aria-controls="conversationsPane" aria-selected="true"
                                     class="nav-link active"
                                     data-bs-toggle="tab"
                                     data-bs-target="#conversationsPane"
@@ -482,6 +517,8 @@
 
                                 <button
                                     id="participantsTabButton"
+
+                                    aria-controls="participantsPane" aria-selected="false"
                                     class="nav-link"
                                     data-bs-toggle="tab"
                                     data-bs-target="#participantsPane"
@@ -505,6 +542,8 @@
 
                         <div
                             id="conversationsPane"
+
+                            aria-labelledby="conversationsTabButton" tabindex="0"
                             class="tab-pane fade show active"
                             role="tabpanel"
                         >
@@ -527,6 +566,8 @@
 
                         <div
                             id="participantsPane"
+
+                            aria-labelledby="participantsTabButton" tabindex="0"
                             class="tab-pane fade"
                             role="tabpanel"
                         >
@@ -566,6 +607,8 @@
 <div
     class="modal fade"
     id="privateMessageModal"
+
+    aria-labelledby="privateChatUsername"
     tabindex="-1"
     aria-hidden="true"
 >
@@ -600,7 +643,7 @@
                             id="privateChatUsername"
                             class="modal-title"
                         >
-                            Privāta sarakste
+                            Privātā sarakste
                         </h5>
 
 
@@ -632,6 +675,8 @@
 
                 <div
                     id="privateMessages"
+
+                    role="region" aria-label="Privātie ziņojumi" tabindex="0"
                     class="private-messages-container"
                 >
 
@@ -652,6 +697,8 @@
 
                 <div
                     id="privateMessageError"
+
+                    role="alert" aria-atomic="true"
                     class="alert alert-danger d-none py-2"
                 >
                 </div>
@@ -664,6 +711,8 @@
                     <input
                         type="text"
                         id="privateMessageInput"
+
+                        aria-label="Privātās ziņas teksts"
                         class="form-control"
                         maxlength="2000"
                         placeholder="Raksti privātu ziņu..."
@@ -696,12 +745,14 @@
 <div
     class="modal fade"
     id="profileModal"
+
+    aria-label="Mans profils"
     tabindex="-1"
     aria-hidden="true"
 >
 
     <div
-        class="modal-dialog modal-dialog-centered"
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
     >
 
         <div
@@ -840,12 +891,14 @@
 <div
     class="modal fade"
     id="changePasswordModal"
+
+    aria-label="Mainīt paroli"
     tabindex="-1"
     aria-hidden="true"
 >
 
     <div
-        class="modal-dialog modal-dialog-centered"
+        class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
     >
 
         <div
@@ -964,6 +1017,8 @@
 
                     <div
                         id="passwordError"
+
+                        role="alert" aria-atomic="true"
                         class="alert alert-danger d-none mb-0"
                     >
                     </div>
@@ -971,6 +1026,8 @@
 
                     <div
                         id="passwordSuccess"
+
+                        role="status"
                         class="alert alert-success d-none mb-0"
                     >
                     </div>
