@@ -38,12 +38,16 @@
         <section class="card auth-card" aria-labelledby="authTitle">
             <div class="card-body">
                 <h1 id="authTitle">Izveido savu kontu</h1>
-                <p class="auth-form-description">Izvēlies lietotājvārdu, norādi savu kursu un izveido paroli.</p>
+                <p class="auth-form-description">Izvēlies lietotājvārdu un kursu, norādi e-pasta adresi un izveido paroli.</p>
 
                 <form id="registerForm">
                     <div class="auth-field">
                         <label for="usernameInput" class="form-label">Lietotājvārds</label>
                         <input type="text" id="usernameInput" class="form-control" minlength="3" maxlength="30" autocomplete="username" placeholder="Izvēlies lietotājvārdu" required>
+                    </div>
+                    <div class="auth-field">
+                        <label for="emailInput" class="form-label">E-pasta adrese</label>
+                        <input type="email" id="emailInput" class="form-control" autocomplete="email" maxlength="254" pattern="(?=[^@]{1,64}@)[^.@]+(?:\.[^.@]+)*@.+\..+" placeholder="Ievadi e-pasta adresi" required>
                     </div>
                     <div class="auth-field">
                         <label for="courseSelect" class="form-label">Kurss</label>

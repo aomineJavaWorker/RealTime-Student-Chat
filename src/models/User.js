@@ -18,6 +18,19 @@ const userSchema = new mongoose.Schema(
             lowercase: true
         },
 
+        email: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            select: false
+        },
+
+        emailVerified: {
+            type: Boolean,
+            default: false,
+            select: false
+        },
+
         passwordHash: {
             type: String,
             required: true,
@@ -48,6 +61,17 @@ userSchema.index(
             usernameKey: {
                 $type: "string"
             }
+        }
+    }
+);
+
+
+userSchema.index(
+    { email: 1 },
+    {
+        unique: true,
+        partialFilterExpression: {
+            email: { $type: "string" }
         }
     }
 );

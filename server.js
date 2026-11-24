@@ -14,6 +14,7 @@ const messageRoutes = require("./src/routes/messages");
 const privateMessageRoutes = require("./src/routes/privateMessages");
 
 const Course = require("./src/models/Course");
+const User = require("./src/models/User");
 
 
 const app = express();
@@ -626,6 +627,7 @@ async function startServer() {
         );
 
 
+        await User.init();
         await createDefaultCourses();
 
 

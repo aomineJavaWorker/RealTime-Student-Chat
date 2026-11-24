@@ -6,6 +6,21 @@ const Course = require("../models/Course");
 
 const router = express.Router();
 
+function isValidEmail(email) {
+    const parts = email.split("@");
+    if (email.length > 254 || parts.length !== 2) return false;
+
+    const [local, domain] = parts;
+    const labels = domain.split(".");
+    const atom = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+$/;
+    const label = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+    return local.length <= 64 &&
+        local.split(".").every(part => atom.test(part)) &&
+        labels.length > 1 &&
+        labels.every(part => label.test(part));
+}
+
 
 function saveSession(req) {
     return new Promise((resolve, reject) => {
@@ -34,12 +49,18 @@ router.post("/register", async (req, res) => {
     try {
         const {
             username,
+            email,
             password,
             courseNumber
         } = req.body;
 
         const cleanUsername =
             username?.trim();
+
+        const cleanEmail =
+            typeof email === "string"
+                ? email.trim().toLowerCase()
+                : "";
 
         const cleanPassword =
             typeof password === "string"
@@ -57,6 +78,20 @@ router.post("/register", async (req, res) => {
         ) {
             return res.status(400).json({
                 message: "Aizpildi visus laukus."
+            });
+        }
+
+
+        if (!cleanEmail) {
+            return res.status(400).json({
+                message: "Ievadi e-pasta adresi."
+            });
+        }
+
+
+        if (!isValidEmail(cleanEmail)) {
+            return res.status(400).json({
+                message: "Ievadi derīgu e-pasta adresi."
             });
         }
 
@@ -161,6 +196,12 @@ router.post("/register", async (req, res) => {
             existingUser.passwordHash =
                 passwordHash;
 
+            existingUser.email =
+                cleanEmail;
+
+            existingUser.emailVerified =
+                false;
+
             user =
                 await existingUser.save();
         } else {
@@ -170,6 +211,9 @@ router.post("/register", async (req, res) => {
                         cleanUsername,
 
                     usernameKey,
+
+                    email:
+                        cleanEmail,
 
                     passwordHash,
 
@@ -216,20 +260,21 @@ router.post("/register", async (req, res) => {
         });
 
     } catch (error) {
-        console.error(
-            "Reģistrācijas kļūda:",
-            error
-        );
-
-
         if (
             error.code === 11000
         ) {
             return res.status(409).json({
                 message:
-                    "Šāds lietotājvārds šajā kursā jau eksistē."
+                    error.keyPattern?.email
+                        ? "Šī e-pasta adrese jau ir reģistrēta."
+                        : "Šāds lietotājvārds šajā kursā jau eksistē."
             });
         }
+
+        console.error(
+            "Reģistrācijas kļūda:",
+            error.name
+        );
 
 
         res.status(500).json({

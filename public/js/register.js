@@ -10,6 +10,26 @@ const usernameInput =
     );
 
 
+const emailInput =
+    document.getElementById(
+        "emailInput"
+    );
+
+
+emailInput.addEventListener("invalid", () => {
+    emailInput.setCustomValidity(
+        emailInput.validity.valueMissing
+            ? "Ievadi e-pasta adresi."
+            : "Ievadi derīgu e-pasta adresi."
+    );
+});
+
+
+emailInput.addEventListener("input", () => {
+    emailInput.setCustomValidity("");
+});
+
+
 const courseSelect =
     document.getElementById(
         "courseSelect"
@@ -150,6 +170,9 @@ registerForm.addEventListener(
         const username =
             usernameInput.value.trim();
 
+        const email =
+            emailInput.value.trim().toLowerCase();
+
 
         const courseNumber =
             Number(
@@ -252,6 +275,9 @@ registerForm.addEventListener(
                             JSON.stringify({
                                 username:
                                     username,
+
+                                email:
+                                    email,
 
                                 password:
                                     password,
