@@ -469,6 +469,36 @@ Reālā `.env` faila paroles un slepenās atslēgas nedrīkst publicēt GitHub.
 
 `.env` fails ir pievienots `.gitignore`.
 
+### E-pasta sūtīšana ar Brevo
+
+Servera e-pasta modulis izmanto Brevo HTTPS API. Pārbaudes vēstuli var nosūtīt no termināļa arī tad, kad čata serveris ir izslēgts. [Brevo API dokumentācija](https://developers.brevo.com/docs/send-a-transactional-email)
+
+1. Izveido [Brevo kontu](https://onboarding.brevo.com/account/register/), apstiprini savu e-pastu un pabeidz konta iestatīšanu.
+2. Atver **Settings → Senders, Domains, IPs → Domains**. Pievieno domēnu, kura DNS pārvaldi. Izpildi Brevo parādītos norādījumus un pārbaudi autentifikācijas statusu. [Domēna autentifikācija](https://help.brevo.com/hc/en-us/articles/12163873383186)
+3. Cilnē **Senders** izvēlies **Add a sender**. Norādi vārdu `Student Chat` un savu sūtītāja adresi. Saglabā izmaiņas. Ja Brevo pieprasa apstiprinājumu, ievadi kodu, ko saņēmi šajā adresē. [Sūtītāja iestatīšana](https://help.brevo.com/hc/en-us/articles/208836149)
+4. Atver **Settings → SMTP & API → API Keys & MCP** un izvēlies **Generate API key**. Piešķir atslēgai projekta nosaukumu, iestati derīguma termiņu un piešķir tiesības sūtīt transakciju e-pastus. Nokopē atslēgu, kamēr tā ir redzama, un saglabā to paroļu pārvaldniekā. [API atslēgas izveide](https://help.brevo.com/hc/en-us/articles/40159485019794)
+5. Esošā lokālā `.env` faila beigās pievieno šīs trīs rindas. Aizpildi pirmās divas ar savu API atslēgu un Brevo apstiprināto sūtītāja adresi.
+
+~~~dotenv
+BREVO_API_KEY=
+BREVO_SENDER_EMAIL=
+BREVO_SENDER_NAME="Student Chat"
+~~~
+
+Render panelī atver projekta **Web Service → Environment → Environment Variables → Edit → Add variable**. Pievieno tos pašus trīs mainīgos. Vārda vērtību `Student Chat` ievadi bez pēdiņām. Izvēlies **Save and deploy**, lai lietotu iestatījumus esošajā būvējumā, vai **Save only**, lai tos lietotu nākamajā izvietošanas reizē. [Render vides mainīgie](https://render.com/docs/configure-environment-variables)
+
+#### Pārbaudes vēstule
+
+Projekta mapē palaid šo komandu, aizstājot piemēra adresi ar savu saņēmēja adresi.
+
+~~~bash
+npm run email:test -- students@example.org
+~~~
+
+Kad Brevo pieņems vēstuli, terminālī parādīsies vēstules ID. Atver **Transactional → Logs**, atrodi šo sūtījumu un pārbaudi, vai tam ir statuss **Delivered**. Pēc tam pārbaudi iesūtni un surogātpasta mapi. Vēstules temats ir **Student Chat e-pasta sūtīšanas pārbaude**. [Brevo nosūtīšanas žurnāls](https://help.brevo.com/hc/en-us/articles/360021533839)
+
+Ja trūkst iestatījuma, komanda norādīs mainīgā nosaukumu. HTTP `401` gadījumā pārbaudi API atslēgu, `403` gadījumā pārbaudi piekļuves tiesības un konta statusu. HTTP `429` nozīmē, ka sasniegts pieprasījumu biežuma ierobežojums. Ja savienojums pārtrūka vai atbilde nepienāca laikus, pirms atkārtotas sūtīšanas pārbaudi Brevo žurnālu.
+
 ---
 
 ## 4. MongoDB Atlas tīkla piekļuve

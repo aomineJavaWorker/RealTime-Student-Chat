@@ -4,6 +4,7 @@
   "description": "Student Chat ir tīmekļa vietne studentu savstarpējai saziņai.",
   "main": "server.js",
   "scripts": {
+    "email:test": "node scripts/test-email.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js"
