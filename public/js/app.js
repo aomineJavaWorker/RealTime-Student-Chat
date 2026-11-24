@@ -1,3 +1,8 @@
+if (new URLSearchParams(window.location.search).get("password-reset") === "success") {
+    document.getElementById("resetSuccess").hidden = false;
+    window.history.replaceState(null, "", "/");
+}
+
 const loginForm =
     document.getElementById(
         "loginForm"

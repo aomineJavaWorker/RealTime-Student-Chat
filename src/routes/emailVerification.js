@@ -1,40 +1,15 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const { normalizeEmail, isValidEmail } = require("../services/emailAddress");
-const { createHmac } = require("node:crypto");
+const limitRequests = require("../services/requestLimit");
 const User = require("../models/User");
 const EmailVerification = require("../models/EmailVerification");
-const VerificationRequestLimit = require("../models/VerificationRequestLimit");
 const { issueCode, confirmCode, retryAfter } = require("../services/emailVerification");
 
 const router = express.Router();
 const emailFields = "+email +emailVerified +pendingEmail +emailRevision";
 const occupied = "Šī e-pasta adrese jau ir reģistrēta. Profilā norādi citu adresi.";
 
-function limitRequests(action, limit) {
-    return async (req, res, next) => {
-        const windowMs = 10 * 60 * 1000;
-        const window = Math.floor(Date.now() / windowMs);
-        const expiresAt = new Date((window + 1) * windowMs);
-        const key = createHmac("sha256", process.env.SESSION_SECRET)
-            .update(JSON.stringify(["verification-limit", action, req.ip, window])).digest("hex");
-        try {
-            await VerificationRequestLimit.updateOne(
-                { _id: key, count: { $lt: limit } },
-                { $inc: { count: 1 }, $setOnInsert: { expiresAt } },
-                { upsert: true }
-            );
-        } catch (error) {
-            if (error.code !== 11000) return next(error);
-            const seconds = Math.max(1, Math.ceil((expiresAt - Date.now()) / 1000));
-            return res.set("Retry-After", String(seconds)).status(429).json({
-                message: "Pārāk daudz pieprasījumu. Mēģini vēlāk.",
-                retryAfter: seconds
-            });
-        }
-        next();
-    };
-}
 
 const limitSends = limitRequests("send", 20);
 

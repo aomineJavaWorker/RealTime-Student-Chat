@@ -5,10 +5,11 @@ const User = require("../models/User");
 const Course = require("../models/Course");
 const { normalizeEmail, isValidEmail } = require("../services/emailAddress");
 const { issueCode } = require("../services/emailVerification");
+const { checkHttpSession } = require("../services/sessionAccess");
 const { router: verificationRoutes, limitSends, verificationError } = require("./emailVerification");
 
 const router = express.Router();
-router.use("/email-verification", verificationRoutes);
+router.use("/email-verification", checkHttpSession, verificationRoutes);
 
 
 function saveSession(req) {
@@ -345,7 +346,7 @@ router.post("/login", async (req, res) => {
                     course._id
             })
                 .select(
-                    "+passwordHash"
+                    "+passwordHash +sessionVersion"
                 );
 
 
@@ -359,7 +360,7 @@ router.post("/login", async (req, res) => {
                         course._id
                 })
                     .select(
-                        "+passwordHash"
+                        "+passwordHash +sessionVersion"
                     );
         }
 
@@ -406,6 +407,8 @@ router.post("/login", async (req, res) => {
 
         req.session.userId =
             user._id.toString();
+
+        req.session.sessionVersion = user.sessionVersion ?? 0;
 
         req.session.username =
             user.username;
@@ -454,7 +457,7 @@ router.post("/login", async (req, res) => {
 // CURRENT USER
 // ==========================================
 
-router.get("/me", async (req, res) => {
+router.get("/me", checkHttpSession, async (req, res) => {
     res.set("Cache-Control", "no-store");
     try {
         if (
@@ -546,7 +549,7 @@ router.get("/me", async (req, res) => {
 // CHANGE PASSWORD
 // ==========================================
 
-router.put("/password", async (req, res) => {
+router.put("/password", checkHttpSession, async (req, res) => {
     try {
         if (
             !req.session?.userId
@@ -646,14 +649,14 @@ router.put("/password", async (req, res) => {
         }
 
 
-        user.passwordHash =
-            await bcrypt.hash(
-                nextPassword,
-                12
-            );
-
-
-        await user.save();
+        const passwordHash = await bcrypt.hash(nextPassword, 12);
+        const changed = await User.updateOne(
+            { _id: user._id, passwordHash: user.passwordHash },
+            { $set: { passwordHash } }
+        );
+        if (!changed.modifiedCount) {
+            return res.status(409).json({ message: "Parole jau ir mainīta. Pieslēdzies vēlreiz." });
+        }
 
 
         res.json({

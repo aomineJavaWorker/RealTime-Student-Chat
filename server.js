@@ -10,6 +10,9 @@ require("dotenv").config();
 
 const courseRoutes = require("./src/routes/courses");
 const authRoutes = require("./src/routes/auth");
+const passwordResetRoutes = require("./src/routes/passwordReset");
+const { checkHttpSession, secureSockets } = require("./src/services/sessionAccess");
+const PasswordReset = require("./src/models/PasswordReset");
 const messageRoutes = require("./src/routes/messages");
 const privateMessageRoutes = require("./src/routes/privateMessages");
 
@@ -119,6 +122,7 @@ app.use(
 io.engine.use(
     sessionMiddleware
 );
+secureSockets(io);
 
 
 // ==========================================
@@ -129,6 +133,10 @@ app.use(
     express.json()
 );
 
+// JSON parsēšanas kļūdā var būt pieprasījuma fragments ar sensitīviem datiem.
+app.use("/api/auth/password-reset", (error, req, res, next) => {
+    res.status(error.status || 400).json({ message: "Nederīgs pieprasījums." });
+});
 
 app.use(
     express.static(
@@ -165,6 +173,11 @@ app.use(
 
 
 app.use(
+    "/api/auth/password-reset",
+    passwordResetRoutes
+);
+
+app.use(
     "/api/auth",
     authRoutes
 );
@@ -172,12 +185,14 @@ app.use(
 
 app.use(
     "/api/messages",
+    checkHttpSession,
     messageRoutes
 );
 
 
 app.use(
     "/api/private-messages",
+    checkHttpSession,
     privateMessageRoutes
 );
 
@@ -629,15 +644,15 @@ async function startServer() {
         );
 
 
-        await Promise.all([User.init(), EmailVerification.init(), VerificationRequestLimit.init()]);
+        await Promise.all([User.init(), EmailVerification.init(), VerificationRequestLimit.init(), PasswordReset.init()]);
         await createDefaultCourses();
 
 
-        server.listen(
+        return server.listen(
             PORT,
             () => {
                 console.log(
-                    `Serveris darbojas: http://localhost:${PORT}`
+                    `Serveris darbojas: http://localhost:${server.address().port}`
                 );
             }
         );
@@ -658,4 +673,5 @@ async function startServer() {
 }
 
 
-startServer();
+if (require.main === module) startServer();
+module.exports = startServer;

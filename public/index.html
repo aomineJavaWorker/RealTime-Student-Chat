@@ -41,6 +41,7 @@
                 <p class="auth-form-description">Ievadi sava konta datus un izvēlies kursu.</p>
 
                 <form id="loginForm">
+                    <p id="resetSuccess" class="alert alert-success" role="status" hidden>Parole ir atjaunota. Pieslēdzies ar jauno paroli.</p>
                     <div class="auth-field">
                         <label for="usernameInput" class="form-label">Lietotājvārds</label>
                         <input type="text" id="usernameInput" class="form-control" minlength="3" maxlength="30" autocomplete="username" placeholder="Ievadi lietotājvārdu" required>
@@ -59,6 +60,7 @@
                     <button id="loginButton" type="submit" class="btn btn-primary w-100 auth-submit">Pieslēgties</button>
                 </form>
 
+                <p class="auth-switch"><a href="forgot-password.html">Aizmirsi paroli?</a></p>
                 <p class="auth-switch">Vēl nav konta? <a href="register.html">Reģistrēties</a></p>
             </div>
         </section>

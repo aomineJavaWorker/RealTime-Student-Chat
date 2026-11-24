@@ -487,6 +487,8 @@ BREVO_SENDER_NAME="Student Chat"
 
 Render panelī atver projekta **Web Service → Environment → Environment Variables → Edit → Add variable**. Pievieno tos pašus trīs mainīgos. Vārda vērtību `Student Chat` ievadi bez pēdiņām. Izvēlies **Save and deploy**, lai lietotu iestatījumus esošajā būvējumā, vai **Save only**, lai tos lietotu nākamajā izvietošanas reizē. [Render vides mainīgie](https://render.com/docs/configure-environment-variables)
 
+Paroles atjaunošanas vēstulēs ir vienreizēji kodi. Brevo sadaļā **Settings → Transactional emails → Retention rules** pārbaudi, vai vēstuļu priekšskatījumiem ir izvēlēts **Never store previews**. Šis iestatījums attiecas uz turpmāk nosūtītajām vēstulēm. [Brevo priekšskatījumu iestatījumi](https://help.brevo.com/hc/en-us/articles/4415743225746)
+
 #### Pārbaudes vēstule
 
 Projekta mapē palaid šo komandu, aizstājot piemēra adresi ar savu saņēmēja adresi.

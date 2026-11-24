@@ -41,6 +41,11 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
+        sessionVersion: {
+            type: Number,
+            select: false
+        },
+
         passwordHash: {
             type: String,
             required: true,

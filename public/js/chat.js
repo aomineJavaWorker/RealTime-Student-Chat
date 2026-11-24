@@ -1300,7 +1300,8 @@ socket.on(
 
 socket.on(
     "disconnect",
-    () => {
+    reason => {
+        if (reason === "io server disconnect") window.location.replace("/");
 
         isTyping =
             false;
