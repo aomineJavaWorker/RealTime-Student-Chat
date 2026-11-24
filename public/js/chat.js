@@ -897,6 +897,9 @@ async function initializeChat() {
         currentUsername =
             data.user.username;
 
+        document.getElementById("verifyEmailMenuItem").hidden =
+            !data.user.needsEmailVerification;
+
 
         currentCourseNumber =
             Number(

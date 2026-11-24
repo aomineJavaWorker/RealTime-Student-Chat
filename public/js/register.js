@@ -304,7 +304,7 @@ registerForm.addEventListener(
 
 
             window.location.href =
-                "/chat.html";
+                "/verify-email.html";
 
         } catch (error) {
 

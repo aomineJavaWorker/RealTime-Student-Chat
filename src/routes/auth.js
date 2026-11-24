@@ -3,23 +3,12 @@ const bcrypt = require("bcrypt");
 
 const User = require("../models/User");
 const Course = require("../models/Course");
+const { normalizeEmail, isValidEmail } = require("../services/emailAddress");
+const { issueCode } = require("../services/emailVerification");
+const { router: verificationRoutes, limitSends, verificationError } = require("./emailVerification");
 
 const router = express.Router();
-
-function isValidEmail(email) {
-    const parts = email.split("@");
-    if (email.length > 254 || parts.length !== 2) return false;
-
-    const [local, domain] = parts;
-    const labels = domain.split(".");
-    const atom = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+$/;
-    const label = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
-
-    return local.length <= 64 &&
-        local.split(".").every(part => atom.test(part)) &&
-        labels.length > 1 &&
-        labels.every(part => label.test(part));
-}
+router.use("/email-verification", verificationRoutes);
 
 
 function saveSession(req) {
@@ -45,7 +34,7 @@ function normalizeUsername(username) {
 // REGISTER
 // ==========================================
 
-router.post("/register", async (req, res) => {
+router.post("/register", limitSends, async (req, res) => {
     try {
         const {
             username,
@@ -58,9 +47,7 @@ router.post("/register", async (req, res) => {
             username?.trim();
 
         const cleanEmail =
-            typeof email === "string"
-                ? email.trim().toLowerCase()
-                : "";
+            normalizeEmail(email);
 
         const cleanPassword =
             typeof password === "string"
@@ -243,6 +230,13 @@ router.post("/register", async (req, res) => {
         );
 
 
+        // Konts un sesija jau ir saglabāti. Kodu var pieprasīt arī vēlāk.
+        try {
+            await issueCode(user);
+        } catch {
+            console.error("Neizdevās sagatavot reģistrācijas apstiprinājuma kodu.");
+        }
+
         res.status(201).json({
             authenticated:
                 true,
@@ -282,7 +276,7 @@ router.post("/register", async (req, res) => {
                 "Neizdevās reģistrēties."
         });
     }
-});
+}, verificationError);
 
 
 // ==========================================
@@ -461,6 +455,7 @@ router.post("/login", async (req, res) => {
 // ==========================================
 
 router.get("/me", async (req, res) => {
+    res.set("Cache-Control", "no-store");
     try {
         if (
             !req.session?.userId
@@ -476,6 +471,7 @@ router.get("/me", async (req, res) => {
             await User.findById(
                 req.session.userId
             )
+                .select("+email +emailVerified +pendingEmail")
                 .populate(
                     "course",
                     "number name"
@@ -520,6 +516,11 @@ router.get("/me", async (req, res) => {
 
                 courseName:
                     user.course.name,
+
+                email: user.email || null,
+                emailVerified: Boolean(user.email && user.emailVerified),
+                pendingEmail: user.pendingEmail || null,
+                needsEmailVerification: Boolean(user.pendingEmail || (user.email && !user.emailVerified)),
 
                 createdAt:
                     user.createdAt

@@ -31,6 +31,16 @@ const userSchema = new mongoose.Schema(
             select: false
         },
 
+        pendingEmail: {
+            type: String,
+            select: false
+        },
+
+        emailRevision: {
+            type: Number,
+            select: false
+        },
+
         passwordHash: {
             type: String,
             required: true,

@@ -15,6 +15,8 @@ const privateMessageRoutes = require("./src/routes/privateMessages");
 
 const Course = require("./src/models/Course");
 const User = require("./src/models/User");
+const EmailVerification = require("./src/models/EmailVerification");
+const VerificationRequestLimit = require("./src/models/VerificationRequestLimit");
 
 
 const app = express();
@@ -627,7 +629,7 @@ async function startServer() {
         );
 
 
-        await User.init();
+        await Promise.all([User.init(), EmailVerification.init(), VerificationRequestLimit.init()]);
         await createDefaultCourses();
 
 

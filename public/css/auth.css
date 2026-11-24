@@ -226,6 +226,10 @@
     padding: 32px;
 }
 
+.verification-card {
+    max-width: 460px;
+}
+
 .auth-card h1 {
     margin: 0 0 10px;
     font-size: 1.75rem;

@@ -123,6 +123,10 @@
 
                 </li>
 
+                <li id="verifyEmailMenuItem" hidden>
+                    <a class="dropdown-item" href="/verify-email.html">Apstiprināt e-pasta adresi</a>
+                </li>
+
 
                 <li>
 
@@ -873,7 +877,36 @@
 
                     </div>
 
+                    <div class="profile-info-row">
+                        <span class="text-secondary">E-pasta adrese</span>
+                        <strong id="profileEmail">…</strong>
+                    </div>
+                    <div class="profile-info-row">
+                        <span class="text-secondary">Apstiprinājuma statuss</span>
+                        <strong id="profileEmailStatus">…</strong>
+                    </div>
+                    <div class="profile-info-row" id="pendingEmailRow" hidden>
+                        <span class="text-secondary">Gaida apstiprinājumu</span>
+                        <strong id="profilePendingEmail"></strong>
+                    </div>
                 </div>
+
+                <section class="mt-3" aria-label="E-pasta pārvaldība">
+                    <div id="profileVerification" class="mb-2" hidden>
+                        <a class="btn btn-primary btn-sm" href="/verify-email.html">Ievadīt kodu</a>
+                        <button class="btn btn-outline-secondary btn-sm" id="profileResend" type="button">Nosūtīt jaunu kodu</button>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm" id="editEmail" type="button" aria-controls="profileEmailForm" aria-expanded="false" disabled>Pievienot e-pasta adresi</button>
+                    <form id="profileEmailForm" class="mt-3" hidden novalidate>
+                        <label for="newProfileEmail" class="form-label">Jaunā e-pasta adrese</label>
+                        <input id="newProfileEmail" class="form-control mb-3" type="email" autocomplete="email" required maxlength="254">
+                        <label for="profileEmailPassword" class="form-label">Pašreizējā parole</label>
+                        <input id="profileEmailPassword" class="form-control mb-2" type="password" autocomplete="current-password" required>
+                        <p class="form-text">Jaunā adrese stāsies spēkā pēc koda apstiprināšanas.</p>
+                        <button id="saveProfileEmail" class="btn btn-primary" type="submit">Nosūtīt apstiprinājuma kodu</button>
+                    </form>
+                    <p id="profileEmailFeedback" class="small mt-2 mb-0" role="status" aria-live="polite"></p>
+                </section>
 
             </div>
 
@@ -1170,6 +1203,7 @@
     src="js/chat.js"
 >
 </script>
+<script src="js/profile-email.js"></script>
 
 
 </body>
