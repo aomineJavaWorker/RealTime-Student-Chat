@@ -409,6 +409,9 @@ router.post("/login", async (req, res) => {
             user._id.toString();
 
         req.session.sessionVersion = user.sessionVersion ?? 0;
+        if (req.body.rememberMe === true) {
+            req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000;
+        }
 
         req.session.username =
             user.username;

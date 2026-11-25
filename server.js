@@ -90,7 +90,10 @@ const sessionMiddleware =
                     process.env.MONGODB_URI,
 
                 collectionName:
-                    "sessions"
+                    "sessions",
+
+                // Servera ieraksta termiņš arī sīkdatnēm bez Expires.
+                ttl: 7 * 24 * 60 * 60
             }),
 
         cookie: {
@@ -101,14 +104,7 @@ const sessionMiddleware =
                 "lax",
 
             secure:
-                isProduction,
-
-            maxAge:
-                1000 *
-                60 *
-                60 *
-                24 *
-                7
+                isProduction
         }
     });
 

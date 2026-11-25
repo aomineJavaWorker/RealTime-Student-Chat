@@ -209,7 +209,9 @@ loginForm.addEventListener(
                                     password,
 
                                 courseNumber:
-                                    courseNumber
+                                    courseNumber,
+
+                                rememberMe: document.getElementById("rememberMe").checked
                             })
                     }
                 );

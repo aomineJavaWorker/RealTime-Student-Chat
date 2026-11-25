@@ -56,12 +56,18 @@
                         <label for="passwordInput" class="form-label">Parole</label>
                         <input type="password" id="passwordInput" class="form-control" autocomplete="current-password" placeholder="Ievadi paroli" required>
                     </div>
+                    <div class="remember-choice mb-3">
+                        <input id="rememberMe" type="checkbox" class="form-check-input" autocomplete="off" aria-describedby="rememberHint">
+                        <label for="rememberMe">Atcerēties mani</label>
+                        <p id="rememberHint">Saglabāt pieteikšanos 7 dienas.</p>
+                    </div>
                     <div id="errorMessage" class="alert alert-danger d-none" role="alert" aria-atomic="true"></div>
                     <button id="loginButton" type="submit" class="btn btn-primary w-100 auth-submit">Pieslēgties</button>
                 </form>
 
                 <p class="auth-switch"><a href="forgot-password.html">Aizmirsi paroli?</a></p>
                 <p class="auth-switch">Vēl nav konta? <a href="register.html">Reģistrēties</a></p>
+                <p class="auth-switch small"><a href="/privacy.html">Privātuma politika</a></p>
             </div>
         </section>
 

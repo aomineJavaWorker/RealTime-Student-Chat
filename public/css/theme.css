@@ -93,3 +93,92 @@
 [data-bs-theme="dark"] .theme-icon-sun {
     display: block;
 }
+
+.theme-settings {
+    width: min(25rem, calc(100% - 1.5rem));
+    max-width: none;
+    max-height: calc(100% - 2rem);
+    margin: auto;
+    padding: clamp(1rem, 4vw, 1.5rem);
+    color: var(--app-text);
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: 1rem;
+}
+
+.theme-settings::backdrop { background: rgb(15 23 42 / 55%); }
+
+.theme-settings form { display: grid; gap: 1.125rem; }
+.theme-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.theme-heading h2 { font-weight: 650; }
+.theme-heading .btn-close { padding: .5rem; }
+.theme-done { justify-self: end; min-width: 5.5rem; border-radius: .65rem; }
+.theme-settings [role="status"]:empty { display: none; }
+
+.theme-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .4rem;
+}
+
+.theme-option {
+    display: grid;
+    height: 100%;
+    min-height: 4.5rem;
+    justify-items: center;
+    align-content: start;
+    gap: .4rem;
+    padding: .75rem .2rem;
+    color: var(--app-text);
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
+    border-radius: .7rem;
+    font-size: .8125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+    cursor: pointer;
+}
+
+.theme-option svg {
+    width: 1.35rem;
+    height: 1.35rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+@media (max-width: 359px) {
+    .theme-option { font-size: .75rem; }
+}
+
+@media (hover: hover) {
+    .theme-option:hover { border-color: var(--app-input-hover); background: var(--app-background); }
+}
+
+.theme-options input:checked + .theme-option {
+    color: var(--app-accent);
+    background: var(--app-soft);
+    border-color: var(--app-accent);
+}
+
+.theme-options input:focus-visible + .theme-option {
+    outline: 2px solid var(--app-focus);
+    outline-offset: 2px;
+}
+
+.remember-choice {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    align-items: start;
+    gap: .15rem .6rem;
+    font-size: .875rem;
+    line-height: 1.45;
+}
+
+.remember-choice .form-check-input { width: 1rem; height: 1rem; margin: .125rem 0 0; }
+.remember-choice label { font-weight: 600; cursor: pointer; }
+.remember-choice input:disabled + label { color: var(--app-muted); cursor: default; }
+.remember-choice p { grid-column: 2; margin: 0; color: var(--app-muted); font-size: .8125rem; }
