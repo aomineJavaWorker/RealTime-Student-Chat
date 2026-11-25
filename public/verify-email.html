@@ -9,6 +9,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="css/theme.css" rel="stylesheet">
     <link href="css/auth.css" rel="stylesheet">
+    <link href="css/footer.css" rel="stylesheet">
 </head>
 <body class="auth-page">
     <a class="auth-skip-link" href="#codeForm">Pāriet uz formu</a>
@@ -44,10 +45,23 @@
                 </form>
                 <button id="resend" type="button" class="btn btn-outline-secondary w-100 mt-2" disabled>Nosūtīt jaunu kodu</button>
                 <p class="auth-switch"><a href="/chat.html">Turpināt uz čatu</a></p>
-                <p class="auth-switch small"><a href="/privacy.html">Privātuma politika</a></p>
             </div>
         </section>
     </main>
+
+<footer class="site-footer">
+    <div class="site-footer-inner">
+        <div class="site-footer-project">
+            <strong><svg class="site-icon" aria-hidden="true"><use href="/icons.svg#chat"/></svg> Student Chat</strong>
+            <span>Bezmaksas mācību projekts studentu saziņai.</span>
+        </div>
+        <nav aria-label="Kājenes saites">
+            <a href="/privacy.html"><svg class="site-icon" aria-hidden="true"><use href="/icons.svg#shield"/></svg> Privātuma politika</a>
+            <a href="mailto:aleksandrs.denisenko.it@gmail.com"><svg class="site-icon" aria-hidden="true"><use href="/icons.svg#mail"/></svg> Kontaktinformācija</a>
+        </nav>
+        <small>© 2026 Student Chat</small>
+    </div>
+</footer>
 
     <script src="js/verify-email.js"></script>
 </body>
